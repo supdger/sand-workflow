@@ -2,9 +2,9 @@
 
 ## Authority
 
-As of 2026-08-17, this directory is the authoritative SandWorkflow source
-unit in the `sand-plugins` workspace.  It owns the plugin backend, frontend
-payload, lifecycle SQL, documentation, release metadata, and package checks.
+As of 2026-09-21, `supdger/sand-workflow` is the authoritative SandWorkflow
+repository. It owns the plugin backend, frontend payload, lifecycle SQL,
+documentation, release metadata, and package checks.
 
 The authoritative workspace location is:
 
@@ -18,19 +18,11 @@ not copy changes from it into a release without review.
 
 ## Host delivery boundary
 
-Normal SandWorkflow demonstrations and acceptance use this configured host:
-
-```text
-/Users/code/project/sand_plugins/sandadmin-demo-host
-```
-
-It may temporarily receive the exact version of this package as a deployment
-copy, but `plugins/sandworkflow`, `server/plugin/sandworkflow`, the matching
-frontend payload, and any Composer autoload entry there are deployment and
-acceptance material only. They must not be edited as a second source of truth.
-`/Users/code/project/sandadmin` remains a pure, zero-business-plugin SandAdmin
-host for baseline checks; it is not the default synchronization, demonstration
-or acceptance target.
+An explicitly selected SandAdmin test host may temporarily receive the exact
+version of this package as a deployment copy. Its `plugins/sandworkflow`,
+`server/plugin/sandworkflow`, matching frontend payload, and Composer autoload
+entry are deployment and acceptance material only. They must not be edited as
+a second source of truth.
 
 Before host acceptance, synchronize this complete package to the configured
 demo host, record the package revision and destination, and verify that the

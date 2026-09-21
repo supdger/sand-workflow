@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_root="${SAND_WORKFLOW_SOURCE:-/Users/code/project/sand_plugins/sandworkflow}"
-host_root="${SANDADMIN_ROOT:-/Users/code/project/sand_plugins/sandadmin-demo-host}"
+source_root="${SAND_WORKFLOW_SOURCE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+host_root="${SANDADMIN_ROOT:-}"
 source_frontend="${source_root}/sandadmin-artd/src/views"
+
+if [[ -z "${host_root}" ]]; then
+  echo "Set SANDADMIN_ROOT to the SandAdmin host selected for acceptance." >&2
+  exit 2
+fi
 
 "${source_root}/tools/check-package-integrity.sh"
 

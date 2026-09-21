@@ -4,7 +4,7 @@ SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流插件，提供流程分组�
 
 > **来源与边界**：这是面向 SandAdmin 的 PostgreSQL 适配包，不是 MySQL 到 PostgreSQL 的原地数据迁移工具。它依赖 SandAdmin 提供的用户、角色、部门、菜单和权限基础能力。它不应被描述为 SandAdmin 以外任何项目的官方发行包；单独分发时必须保留适用的上游、第三方和许可证声明。
 
-> **权威源码**：本目录是 `sand-plugins` 工作区中 SandWorkflow 的唯一权威源码单元。`/Users/code/project/sand_plugins/sandadmin-demo-host` 的安装副本只用于受控同步与真实验收，不能作为并行开发源。`/Users/code/project/sandadmin` 是纯净通用宿主，只用于零插件基线。同步规则和迁移记录见 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md)。
+> **权威源码**：`supdger/sand-workflow` 是 SandWorkflow 的唯一权威仓库。消费工作区的安装副本只用于受控同步与真实验收，不能作为并行开发源。`supdger/sandadmin` 是纯净通用宿主，只维护统一插件目录。迁移记录见 [SOURCE_MIGRATION.md](SOURCE_MIGRATION.md)。
 
 ## 许可证与上游
 

@@ -9,7 +9,7 @@ payload, lifecycle SQL, documentation, release metadata, and package checks.
 The authoritative workspace location is:
 
 ```text
-/Users/code/project/sand_plugins/sandworkflow
+https://github.com/supdger/sand-workflow
 ```
 
 The historical directory `/Users/code/project/plugins/sandworkflow` is not a

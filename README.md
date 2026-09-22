@@ -1,6 +1,6 @@
 # SandWorkflow
 
-SandWorkflow 是面向 SandAdmin 6.x 的 PostgreSQL 工作流插件，提供流程设计、发布、发起、审批、待办、已办、抄送和流程数据管理。
+SandWorkflow 是面向 SandAdmin 0.1.x 的 PostgreSQL 工作流插件，提供流程设计、发布、发起、审批、待办、已办、抄送和流程数据管理。
 
 ## 功能
 
@@ -13,7 +13,7 @@ SandWorkflow 是面向 SandAdmin 6.x 的 PostgreSQL 工作流插件，提供流�
 
 ## 环境要求
 
-- SandAdmin 6.x
+- SandAdmin 0.1.x
 - PostgreSQL
 - 前端依赖见 `config.json`
 

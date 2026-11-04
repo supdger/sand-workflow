@@ -2,7 +2,7 @@
 
 SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流插件，提供流程设计、发布、发起、审批、待办、抄送和流程数据查询。流程管理员设计与发布流程，发起人提交申请，审批人处理待办。
 
-**当前只有 1.0.7 预览版，没有稳定版。** 预览版尚未在真实 SandAdmin 宿主完成安装、业务闭环、升级和卸载验收；使用前请在隔离环境自行验证，未验收范围见[版本与验收范围](https://github.com/supdger/sand-workflow/wiki/SandWorkflow-Versions)。
+**当前公开发行为 1.0.8 修正版，用于修正 1.0.7 预览版的宿主兼容声明。** 该版本尚未在真实 SandAdmin 宿主完成安装、业务闭环、升级和卸载验收；使用前请在隔离环境自行验证，未验收范围见[版本与验收范围](https://github.com/supdger/sand-workflow/wiki/SandWorkflow-Versions)。
 
 ## 版本更新
 

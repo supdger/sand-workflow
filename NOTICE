@@ -1,26 +1,30 @@
 SandWorkflow 版权与来源声明
 
-SandWorkflow 的前端流程设计器部分基于以下上游项目修改：
+一、许可证按目录划分（本仓库整体不标 MIT）
 
-  workflow-web
+- 后端目录 plugin/sandworkflow/：SandWorkflow 自写代码，采用 MIT 许可证，
+  全文见 plugin/sandworkflow/LICENSE，版权人为青岛沙盒创意网络科技有限公司。
+- 前端目录 sandadmin-artd/src/views/plugin/sandworkflow/：含 BeeFlow 派生代码，
+  整个目录按 GNU Affero General Public License v3（AGPL-3.0）许可，
+  全文见该目录下的 LICENSE。
+- 根目录 LICENSE 为 AGPL-3.0 全文。本仓库作为整体分发时，按保守口径适用 AGPL-3.0；
+  后端目录可单独按 MIT 使用。
+
+二、上游项目与原作者版权
+
+以下目录为对 BeeFlow 的修改，修改于 2026 年 8 月至 11 月：
+
+  sandadmin-artd/src/views/plugin/sandworkflow/
+
+上游项目：BeeFlow 流程设计器 workflow-web
   https://github.com/zhangjinlibra/workflow-web
-  上游许可证：GNU Affero General Public License v3（AGPL-3.0）
+  原作者：zhangjinlibra（BeeFlow），原作者版权予以保留
+  上游许可证：AGPL-3.0（快照：上游提交 da09430e924ccf6536e939aa4541512300be97a1）
 
-workflow-web 是开源 BeeFlow 工作流设计器。SandWorkflow 将其适配到
-SandAdmin 插件布局、接口、PostgreSQL 生命周期、权限与运行时约定。
+SandWorkflow 将其适配到 SandAdmin 插件布局、接口、PostgreSQL 生命周期、
+权限与运行时约定。本声明不授予商标权，也不表示 SandWorkflow 是上游项目的官方发布。
 
-许可证适用范围：
-
-- SandWorkflow 自有代码采用 MIT 许可证，全文见根目录 LICENSE，版权人为
-  青岛沙盒创意网络科技有限公司。
-- workflow-web 派生的流程设计器代码仍受 AGPL-3.0 约束，许可证全文见
-  licenses/AGPL-3.0.txt；对该部分代码的修改与再分发须遵守 AGPL-3.0 条款。
-- 本声明不授予商标权，也不表示 SandWorkflow 是上游项目的官方发布。
-
-AGPL-3.0 部分文件清单
-
-以下文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可（全文见
-licenses/AGPL-3.0.txt）：
+三、派生文件清单（文件头已标注 AGPL-3.0）
 
 sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/approved.svg
 sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/canceled.svg
@@ -51,3 +55,8 @@ sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/WidgetDetail.vue
 sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/form-make.less
 sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/index.vue
 sandadmin-artd/src/views/plugin/sandworkflow/workflow/store/index.js
+
+四、虽为自写但引用了派生代码、分发时按 AGPL-3.0 对待的文件
+
+sandadmin-artd/src/views/plugin/sandworkflow/manage/definition/edit.vue（引用派生的设计器组件）
+sandadmin-artd/src/views/plugin/sandworkflow/components/flow-status-stamp.vue（复用 4 个派生的状态章 SVG）

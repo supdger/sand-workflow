@@ -1,4 +1,4 @@
-// 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 licenses/AGPL-3.0.txt
+// 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE
 "use strict";
 
 const CHINA_AREA = [

@@ -1,4 +1,4 @@
-<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 licenses/AGPL-3.0.txt -->
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE -->
 <template>
   <a-modal v-if="isOpened" v-model:visible="isOpened" @ok="onOkClicked()" @cancel="onCancelClicked()" titleAlign="start" :width="890">
     <template #title> 请选择组织成员 </template>

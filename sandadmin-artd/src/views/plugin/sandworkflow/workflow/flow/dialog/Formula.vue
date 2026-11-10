@@ -1,4 +1,5 @@
 <!-- 计算公式 -->
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 licenses/AGPL-3.0.txt -->
 <template>
   <a-modal :visible="visible" @ok="handleOk" @cancel="handleClose" modal-class="flow-formula-modal" draggable>
     <template #title> 编辑计算公式 </template>

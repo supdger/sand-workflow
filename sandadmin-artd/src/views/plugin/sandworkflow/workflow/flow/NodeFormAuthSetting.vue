@@ -1,4 +1,5 @@
 <!-- 节点表单权限设置 -->
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 licenses/AGPL-3.0.txt -->
 <template>
   <div class="item-form-auth">
     <table cellpadding="0" cellspacing="0">

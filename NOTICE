@@ -16,3 +16,38 @@ SandAdmin 插件布局、接口、PostgreSQL 生命周期、权限与运行时�
 - workflow-web 派生的流程设计器代码仍受 AGPL-3.0 约束，许可证全文见
   licenses/AGPL-3.0.txt；对该部分代码的修改与再分发须遵守 AGPL-3.0 条款。
 - 本声明不授予商标权，也不表示 SandWorkflow 是上游项目的官方发布。
+
+AGPL-3.0 部分文件清单
+
+以下文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可（全文见
+licenses/AGPL-3.0.txt）：
+
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/approved.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/canceled.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/rejected.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/underway.svg
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/common/EditableText.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/AddNode.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/NodeFormAuthSetting.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/NodeWrap.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ArrayUtil.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ChinaArea.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FlowConstant.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FlowFormula.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FormAuth.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FormExp.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ObjectUtil.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/Snowflake.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/is.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/dialog/Formula.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/dialog/OrganChooseBox.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/ApproverDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/ConditionDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/CopyerDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/PromoterDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/TransactDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/index.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/WidgetDetail.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/form-make.less
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/index.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/store/index.js

@@ -33,4 +33,4 @@ SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流插件，提供流程设计�
 
 ## 许可与反馈
 
-流程设计器基于 [workflow-web](https://github.com/zhangjinlibra/workflow-web) 修改，适用 [GNU AGPL v3](LICENSE)；来源和修改说明见 [NOTICE](NOTICE)。问题与建议请提交到 [Issues](https://github.com/supdger/sand-workflow/issues)。
+SandWorkflow 自有代码采用 [MIT 许可证](LICENSE)；流程设计器基于 [workflow-web](https://github.com/zhangjinlibra/workflow-web) 修改，该派生部分仍适用 [GNU AGPL v3](licenses/AGPL-3.0.txt)。来源和修改说明见 [NOTICE](NOTICE)。问题与建议请提交到 [Issues](https://github.com/supdger/sand-workflow/issues)。

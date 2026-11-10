@@ -18,11 +18,17 @@ SandWorkflow 版权与来源声明
 
 上游项目：BeeFlow 流程设计器 workflow-web
   https://github.com/zhangjinlibra/workflow-web
-  原作者：zhangjinlibra（BeeFlow），原作者版权予以保留
-  上游许可证：AGPL-3.0（快照：上游提交 da09430e924ccf6536e939aa4541512300be97a1）
+  原作者：zhangjinlibra（BeeFlow），原作者版权予以保留（上游 README、package.json
+  和源文件头均无单独的版权行，故无可原样转录的版权声明）
+  上游许可证：AGPL-3.0（许可证快照取自上游提交 da09430e924ccf6536e939aa4541512300be97a1，取于 2026-11-10）
 
 SandWorkflow 将其适配到 SandAdmin 插件布局、接口、PostgreSQL 生命周期、
 权限与运行时约定。本声明不授予商标权，也不表示 SandWorkflow 是上游项目的官方发布。
+
+上述修改部分版权所有 © 2026 青岛沙盒创意网络科技有限公司，按 AGPL-3.0 许可。
+
+通过网络向用户提供含本前端的服务时，应向用户提供对应源码，源码地址：
+https://github.com/supdger/sand-workflow
 
 三、派生文件清单（文件头已标注 AGPL-3.0）
 

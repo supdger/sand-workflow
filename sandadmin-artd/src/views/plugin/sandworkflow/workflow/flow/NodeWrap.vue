@@ -1,3 +1,4 @@
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE -->
 <template>
   <!-- 非网关节点 -->
   <div class="node-wrap" v-if="[NODE.START, NODE.APPROVE, NODE.COPY, NODE.TRANSACT].includes(nodeConfig.type)">

@@ -1,3 +1,4 @@
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE -->
 <template>
   <section class="form-make-box">
     <!-- 左侧控件列表 -->

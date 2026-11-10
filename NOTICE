@@ -1,16 +1,68 @@
-SandWorkflow distribution notice
+SandWorkflow 版权与来源声明
 
-SandWorkflow contains modified frontend workflow-designer code derived from:
+一、许可证按目录划分（本仓库整体不标 MIT）
 
-  workflow-web
+- 后端目录 plugin/sandworkflow/：SandWorkflow 自写代码，采用 MIT 许可证，
+  全文见 plugin/sandworkflow/LICENSE，版权人为青岛沙盒创意网络科技有限公司。
+- 前端目录 sandadmin-artd/src/views/plugin/sandworkflow/：含 BeeFlow 派生代码，
+  整个目录按 GNU Affero General Public License v3（AGPL-3.0）许可，
+  全文见该目录下的 LICENSE。
+- 根目录 LICENSE 为 AGPL-3.0 全文。本仓库作为整体分发时，按保守口径适用 AGPL-3.0；
+  后端目录可单独按 MIT 使用。
+
+二、上游项目与原作者版权
+
+以下目录为对 BeeFlow 的修改，修改于 2026 年 8 月至 11 月：
+
+  sandadmin-artd/src/views/plugin/sandworkflow/
+
+上游项目：BeeFlow 流程设计器 workflow-web
   https://github.com/zhangjinlibra/workflow-web
-  Upstream license: GNU Affero General Public License version 3
+  原作者：zhangjinlibra（BeeFlow），原作者版权予以保留（上游 README、package.json
+  和源文件头均无单独的版权行，故无可原样转录的版权声明）
+  上游许可证：AGPL-3.0（许可证快照取自上游提交 da09430e924ccf6536e939aa4541512300be97a1，取于 2026-11-10）
 
-The upstream project describes this component as the open-source BeeFlow
-workflow designer. SandWorkflow adapts the designer to the SandAdmin plugin
-layout, APIs, PostgreSQL lifecycle, permissions, and runtime contracts.
+SandWorkflow 将其适配到 SandAdmin 插件布局、接口、PostgreSQL 生命周期、
+权限与运行时约定。本声明不授予商标权，也不表示 SandWorkflow 是上游项目的官方发布。
 
-SandWorkflow is distributed under the GNU Affero General Public License
-version 3. The complete license text is included in LICENSE. This notice does
-not grant trademark rights and does not describe SandWorkflow as an official
-release of the upstream project.
+上述修改部分版权所有 © 2026 青岛沙盒创意网络科技有限公司，按 AGPL-3.0 许可。
+
+通过网络向用户提供含本前端的服务时，应向用户提供对应源码，源码地址：
+https://github.com/supdger/sand-workflow
+
+三、派生文件清单（文件头已标注 AGPL-3.0）
+
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/approved.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/canceled.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/rejected.svg
+sandadmin-artd/src/views/plugin/sandworkflow/assets/stamp/underway.svg
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/common/EditableText.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/AddNode.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/NodeFormAuthSetting.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/NodeWrap.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ArrayUtil.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ChinaArea.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FlowConstant.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FlowFormula.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FormAuth.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/FormExp.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/ObjectUtil.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/Snowflake.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/common/is.js
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/dialog/Formula.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/dialog/OrganChooseBox.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/ApproverDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/ConditionDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/CopyerDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/PromoterDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/drawer/TransactDrawer.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/flow/index.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/WidgetDetail.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/form-make.less
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/form-make/index.vue
+sandadmin-artd/src/views/plugin/sandworkflow/workflow/store/index.js
+
+四、虽为自写但引用了派生代码、分发时按 AGPL-3.0 对待的文件
+
+sandadmin-artd/src/views/plugin/sandworkflow/manage/definition/edit.vue（引用派生的设计器组件）
+sandadmin-artd/src/views/plugin/sandworkflow/components/flow-status-stamp.vue（复用 4 个派生的状态章 SVG）

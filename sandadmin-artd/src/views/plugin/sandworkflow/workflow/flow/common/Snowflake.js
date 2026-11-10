@@ -2,6 +2,7 @@
  * A function for converting hex <-> dec w/o loss of precision.
  * By Dan Vanderkam http://www.danvk.org/hex2dec.html
  */
+// 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE
 
 // Adds two arrays for the given base (10 or 16), returning the result.
 // This turns out to be the only "primitive" operation we need.

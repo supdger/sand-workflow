@@ -1,3 +1,4 @@
+<!-- 本文件派生自 zhangjinlibra/workflow-web，按 AGPL-3.0 许可，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE -->
 <template>
   <div class="editable-text" @click="startEditing">
     <a-input v-if="editing" ref="inputRef" v-model:model-value="text" :max-length="16" @blur="finishEditing" />

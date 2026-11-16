@@ -19,6 +19,8 @@ export interface FieldAuthPanelProps {
   conditionVars: Set<string>;
   /** 抄送节点传 false：抄送人只能看，不给可编辑（F-07）。 */
   canEdit: boolean;
+  /** 页面只读：三态全部禁用，值照常回显。 */
+  readOnly?: boolean;
   dispatch: Dispatch<DraftAction>;
 }
 
@@ -32,13 +34,14 @@ interface AuthRowProps {
   type: number;
   disabledEdit: boolean;
   canEdit: boolean;
+  readOnly?: boolean;
   dispatch: Dispatch<DraftAction>;
   indent?: boolean;
 }
 
 function AuthRow(props: AuthRowProps) {
   const { t } = useTranslation('workflow');
-  const { node, widgets, fieldName, detailName, label, type, disabledEdit, canEdit, dispatch, indent } = props;
+  const { node, widgets, fieldName, detailName, label, type, disabledEdit, canEdit, readOnly, dispatch, indent } = props;
 
   const top = (node.formAuths ?? []).find((entry) => entry.name === fieldName);
   const entry =
@@ -71,6 +74,7 @@ function AuthRow(props: AuthRowProps) {
         <RadioGroup
           type="button"
           value={state}
+          disabled={readOnly}
           onChange={(event) => {
             const next = event.target.value as FieldAuth;
             dispatch({
@@ -108,6 +112,7 @@ export function FieldAuthPanel({
   widgets,
   conditionVars,
   canEdit,
+  readOnly,
   dispatch,
 }: FieldAuthPanelProps) {
   const { t } = useTranslation('workflow');
@@ -156,6 +161,7 @@ export function FieldAuthPanel({
                       conditionVars.has(child.name)
                     }
                     canEdit={canEdit}
+                    readOnly={readOnly}
                     dispatch={dispatch}
                     indent
                   />
@@ -174,6 +180,7 @@ export function FieldAuthPanel({
               type={widget.type}
               disabledEdit={locked}
               canEdit={canEdit}
+              readOnly={readOnly}
               dispatch={dispatch}
             />
           );

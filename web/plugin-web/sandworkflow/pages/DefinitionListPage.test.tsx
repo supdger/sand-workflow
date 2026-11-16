@@ -131,6 +131,31 @@ describe('DefinitionListPage', () => {
     expect(await screen.findByText('编辑页占位')).toBeInTheDocument();
   });
 
+  it('只有查看码的用户显示「查看」入口，点按跳同一设计器路由', async () => {
+    setToken('mock-reader-token');
+    // /me 覆盖成只有查看码的账号：入口判定走 useCan 的 permissions。
+    server.use(
+      http.get('*/api/admin/v1/me', () =>
+        HttpResponse.json({
+          data: {
+            id: 'u-reader',
+            username: 'reader',
+            nickname: '只读用户',
+            permissions: ['sandworkflow:definition:index', 'sandworkflow:definition:read'],
+          },
+          request_id: 'test-reader',
+        }),
+      ),
+    );
+    useDefinitionHandlers([definitionRow(7, { name: '用章申请' })]);
+    renderPage();
+
+    await screen.findByText('用章申请');
+    expect(screen.queryByRole('button', { name: /设计流程/ })).not.toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: /查看/ }));
+    expect(await screen.findByText('编辑页占位')).toBeInTheDocument();
+  });
+
   it('列表接口返回业务 403 时显示无权限错误态', async () => {
     setToken('mock-admin-token');
     server.use(

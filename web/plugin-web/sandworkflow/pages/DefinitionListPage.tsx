@@ -13,6 +13,7 @@ import type { ColumnProps } from '@douyinfe/semi-ui/lib/es/table/interface';
 import {
   IconDelete,
   IconEdit,
+  IconEyeOpened,
   IconPlus,
   IconSafe,
   IconSearch,
@@ -59,6 +60,7 @@ export function DefinitionListPage() {
   const { values, setValues } = useUrlQuery(QUERY_FIELDS);
 
   const canCreate = useCan('sandworkflow:definition:save');
+  const canRead = useCan('sandworkflow:definition:read');
   const canUpdate = useCan('sandworkflow:definition:update');
   const canPublish = useCan('sandworkflow:definition:publish');
   const canDelete = useCan('sandworkflow:definition:destroy');
@@ -308,6 +310,18 @@ export function DefinitionListPage() {
                 >
                   {t('definitions.design')}
                 </Button>
+              ) : canRead ? (
+                // 「设计流程」要 update 写码，只读用户进同一设计器路由，
+                // 由编辑页按 useCan 判定进入只读模式。
+                <Button
+                  size="small"
+                  theme="borderless"
+                  type="primary"
+                  icon={<IconEyeOpened />}
+                  onClick={() => navigate(editPath(row.id))}
+                >
+                  {t('definitions.view')}
+                </Button>
               ) : null}
               {menuItems.length > 0 ? (
                 <Dropdown
@@ -344,7 +358,7 @@ export function DefinitionListPage() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, navigate, canUpdate, canPublish, canDelete, moreOpenId],
+    [t, navigate, canRead, canUpdate, canPublish, canDelete, moreOpenId],
   );
 
   if (definitions.isError || definitions.isPaused) {

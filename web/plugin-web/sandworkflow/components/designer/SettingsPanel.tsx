@@ -21,6 +21,8 @@ export interface SettingsPanelProps {
   widgets: FlowWidget[];
   /** 全树被条件引用的字段名，字段权限区据此禁掉可编辑项。 */
   conditionVars: Set<string>;
+  /** 页面只读（无 RBAC 写权限码）：全部配置控件禁用，值照常回显。 */
+  readOnly?: boolean;
 }
 
 /**
@@ -28,7 +30,7 @@ export interface SettingsPanelProps {
  * 主体按节点类型分发到 panels/ 下的专属面板；所有改动经 dispatch
  * 走 useDefinitionDraft 的 action，不直接摸树。
  */
-export function SettingsPanel({ node, dispatch, widgets, conditionVars }: SettingsPanelProps) {
+export function SettingsPanel({ node, dispatch, widgets, conditionVars, readOnly }: SettingsPanelProps) {
   const { t } = useTranslation('workflow');
 
   const body = (() => {
@@ -37,21 +39,35 @@ export function SettingsPanel({ node, dispatch, widgets, conditionVars }: Settin
     }
     switch (node.type) {
       case NODE_TYPE.START:
-        return <StartPanel node={node} dispatch={dispatch} />;
+        return <StartPanel node={node} dispatch={dispatch} readOnly={readOnly} />;
       case NODE_TYPE.APPROVE:
       case NODE_TYPE.TRANSACT:
         return (
-          <AssigneePanel node={node} dispatch={dispatch} widgets={widgets} conditionVars={conditionVars} />
+          <AssigneePanel
+            node={node}
+            dispatch={dispatch}
+            widgets={widgets}
+            conditionVars={conditionVars}
+            readOnly={readOnly}
+          />
         );
       case NODE_TYPE.COPY:
         return (
-          <CopyPanel node={node} dispatch={dispatch} widgets={widgets} conditionVars={conditionVars} />
+          <CopyPanel
+            node={node}
+            dispatch={dispatch}
+            widgets={widgets}
+            conditionVars={conditionVars}
+            readOnly={readOnly}
+          />
         );
       case NODE_TYPE.CONDITION:
-        return <ConditionPanel node={node} dispatch={dispatch} widgets={widgets} />;
+        return (
+          <ConditionPanel node={node} dispatch={dispatch} widgets={widgets} readOnly={readOnly} />
+        );
       case NODE_TYPE.EXCLUSIVE_GATEWAY:
       case NODE_TYPE.END:
-        return <GatewayPanel node={node} dispatch={dispatch} />;
+        return <GatewayPanel node={node} dispatch={dispatch} readOnly={readOnly} />;
       default:
         // 未知类型节点（老数据）：不给编辑入口，JSON 层原样保留（F-09）。
         return (

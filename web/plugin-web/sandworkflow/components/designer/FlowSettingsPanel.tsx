@@ -24,6 +24,8 @@ export interface FlowSettingsPanelProps {
   meta: FlowSettingsMeta;
   onMetaChange: (patch: Partial<FlowSettingsMeta>) => void;
   dispatch: Dispatch<DraftAction>;
+  /** 页面只读（无 RBAC 写权限码）：全部配置控件禁用，值照常回显。 */
+  readOnly?: boolean;
 }
 
 /**
@@ -37,6 +39,7 @@ export function FlowSettingsPanel({
   meta,
   onMetaChange,
   dispatch,
+  readOnly,
 }: FlowSettingsPanelProps) {
   const { t } = useTranslation('workflow');
   const groups = useQuery({ queryKey: ['sandworkflow', 'groups', 'all'], queryFn: listAllGroups });
@@ -72,6 +75,7 @@ export function FlowSettingsPanel({
             value={meta.group_id ?? undefined}
             placeholder={t('designer.flow.groupPlaceholder')}
             loading={groups.isPending}
+            disabled={readOnly}
             showClear
             style={{ width: '100%' }}
             onChange={(value) => onMetaChange({ group_id: value === undefined ? null : Number(value) })}
@@ -91,6 +95,7 @@ export function FlowSettingsPanel({
             value={meta.description}
             maxCount={500}
             rows={3}
+            disabled={readOnly}
             placeholder={t('designer.flow.descriptionPlaceholder')}
             onChange={(value) => onMetaChange({ description: value })}
           />
@@ -102,6 +107,7 @@ export function FlowSettingsPanel({
           <Input
             value={meta.icon}
             maxLength={1000}
+            disabled={readOnly}
             placeholder={t('designer.flow.iconPlaceholder')}
             onChange={(value) => onMetaChange({ icon: value })}
           />
@@ -111,6 +117,7 @@ export function FlowSettingsPanel({
           <Switch
             size="small"
             checked={meta.is_cancelable === 1}
+            disabled={readOnly}
             onChange={(checked) => onMetaChange({ is_cancelable: checked ? 1 : 0 })}
           />
         </div>
@@ -125,6 +132,7 @@ export function FlowSettingsPanel({
         </Typography.Text>
         <RadioGroup
           value={permissionType}
+          disabled={readOnly}
           onChange={(event) => setPermission({ type: Number(event.target.value) })}
         >
           <Radio value={1}>{t('designer.flow.permissionAll')}</Radio>
@@ -134,6 +142,7 @@ export function FlowSettingsPanel({
           <>
             <OrgPicker
               value={initiators}
+              disabled={readOnly}
               onChange={(items) => setPermission({ flowInitiators: items })}
             />
             {initiators.length === 0 ? (
@@ -153,6 +162,7 @@ export function FlowSettingsPanel({
         <UserPicker
           value={workFlowDef.flowAdminIds ?? []}
           placeholder={t('designer.flow.adminsPlaceholder')}
+          disabled={readOnly}
           onChange={(ids) => setWorkFlowDef({ flowAdminIds: ids })}
         />
         <Typography.Text size="small" type="tertiary">

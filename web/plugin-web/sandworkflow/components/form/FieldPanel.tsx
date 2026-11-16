@@ -37,6 +37,8 @@ export interface FieldPanelProps {
   widgets: FlowWidget[];
   /** 合并补丁写回选中控件。 */
   onPatch: (patch: Partial<FlowWidget>) => void;
+  /** 页面只读（无 RBAC 写权限码）：全部配置控件禁用，值照常回显。 */
+  readOnly?: boolean;
 }
 
 const SUB_FIELD_TYPES = WIDGET_PALETTE.filter(isSubFieldType);
@@ -62,7 +64,7 @@ function Labelled({ label, children }: LabelledProps) {
  * + 按类型的可配置项（F-23）：单选多选 options、日期 format、
  * 明细 details 子字段、公式表达式（编辑器私有键，后端不消费）。
  */
-export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
+export function FieldPanel({ widget, widgets, onPatch, readOnly }: FieldPanelProps) {
   const { t } = useTranslation('workflow');
 
   if (!widget) {
@@ -111,6 +113,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
         <Input
           value={widget.label ?? ''}
           maxLength={60}
+          disabled={readOnly}
           onChange={(value) => onPatch({ label: value })}
         />
       </Labelled>
@@ -120,6 +123,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
           value={widget.name}
           maxLength={64}
           validateStatus={nameWarning ? 'warning' : 'default'}
+          disabled={readOnly}
           onChange={(value) => onPatch({ name: value })}
         />
         {nameWarning ? (
@@ -134,6 +138,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
           <Input
             value={widget.placeholder ?? ''}
             maxLength={120}
+            disabled={readOnly}
             onChange={(value) => onPatch({ placeholder: value })}
           />
         </Labelled>
@@ -145,6 +150,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
           <Switch
             size="small"
             checked={widget.required === true}
+            disabled={readOnly}
             onChange={(checked) => onPatch({ required: checked })}
           />
         </div>
@@ -154,6 +160,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
         <Labelled label={t('designer.form.fieldFormat')}>
           <Select
             value={widget.format ?? 'YYYY-MM-DD'}
+            disabled={readOnly}
             style={{ width: '100%' }}
             onChange={(value) => onPatch({ format: String(value) })}
           >
@@ -169,6 +176,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
             size="small"
             value={widget.options ?? []}
             placeholder={t('designer.form.optionsHint')}
+            disabled={readOnly}
             onChange={(next) => onPatch({ options: next })}
           />
         </Labelled>
@@ -179,6 +187,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
           <TextArea
             value={typeof widget.expression === 'string' ? widget.expression : ''}
             rows={3}
+            disabled={readOnly}
             placeholder={t('designer.form.formulaPlaceholder')}
             onChange={(value) => onPatch({ expression: value })}
           />
@@ -198,6 +207,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
               icon={<IconPlus />}
               size="small"
               theme="light"
+              disabled={readOnly}
               onClick={() => setDetails([...details, createSubField(widgets, WIDGET_TYPE.TEXT)])}
             >
               {t('designer.form.detailAdd')}
@@ -216,6 +226,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                 <Select
                   size="small"
                   value={child.type}
+                  disabled={readOnly}
                   style={{ width: 130 }}
                   onChange={(value) => setDetail(index, { type: Number(value) })}
                 >
@@ -230,7 +241,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                     icon={<IconArrowUp />}
                     size="small"
                     theme="borderless"
-                    disabled={index === 0}
+                    disabled={index === 0 || readOnly}
                     aria-label={t('designer.form.moveUp')}
                     onClick={() => setDetails(moveWidgetAt(details, index, -1))}
                   />
@@ -238,7 +249,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                     icon={<IconArrowDown />}
                     size="small"
                     theme="borderless"
-                    disabled={index === details.length - 1}
+                    disabled={index === details.length - 1 || readOnly}
                     aria-label={t('designer.form.moveDown')}
                     onClick={() => setDetails(moveWidgetAt(details, index, 1))}
                   />
@@ -247,6 +258,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                     size="small"
                     theme="borderless"
                     type="danger"
+                    disabled={readOnly}
                     aria-label={t('designer.form.detailDelete')}
                     onClick={() => setDetails(removeWidgetAt(details, index))}
                   />
@@ -258,6 +270,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                 maxLength={64}
                 placeholder={t('designer.form.fieldName')}
                 validateStatus={dupNames.has(child.name.trim()) ? 'warning' : 'default'}
+                disabled={readOnly}
                 onChange={(value) => setDetail(index, { name: value })}
               />
               <Input
@@ -265,6 +278,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                 value={child.label ?? ''}
                 maxLength={60}
                 placeholder={t('designer.form.fieldLabel')}
+                disabled={readOnly}
                 onChange={(value) => setDetail(index, { label: value })}
               />
               {hasOptions(child.type) ? (
@@ -272,6 +286,7 @@ export function FieldPanel({ widget, widgets, onPatch }: FieldPanelProps) {
                   size="small"
                   value={child.options ?? []}
                   placeholder={t('designer.form.optionsHint')}
+                  disabled={readOnly}
                   onChange={(next) => setDetail(index, { options: next })}
                 />
               ) : null}

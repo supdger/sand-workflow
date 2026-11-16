@@ -6,6 +6,8 @@
 export interface CanvasHandlers {
   /** 当前选中节点的标识（nodeKeyOf 取值），null 为未选中。 */
   selectedKey: string | null;
+  /** 只读（无 RBAC 写权限码）：增删改入口一律不渲染，点选查看仍可用。 */
+  readOnly?: boolean;
   /** 点选节点卡片/分支头。 */
   onSelect: (key: string) => void;
   /** 链上「+」：在 afterKey 节点的 childNode 位置插入 type 类型节点。 */

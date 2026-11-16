@@ -10,10 +10,12 @@ import { nodeKeyOf } from '../../../model/nodeTypes';
 export interface NodeNameFieldProps {
   node: FlowNode;
   dispatch: Dispatch<DraftAction>;
+  /** 只读展示当前值，不给改。 */
+  disabled?: boolean;
 }
 
 /** 各节点面板共用的节点名编辑：直接 updateNode 写 name。 */
-export function NodeNameField({ node, dispatch }: NodeNameFieldProps) {
+export function NodeNameField({ node, dispatch, disabled }: NodeNameFieldProps) {
   const { t } = useTranslation('workflow');
   return (
     <div className="flex flex-col gap-1">
@@ -24,6 +26,7 @@ export function NodeNameField({ node, dispatch }: NodeNameFieldProps) {
         value={node.name ?? ''}
         maxLength={60}
         placeholder={t('designer.node.unnamed')}
+        disabled={disabled}
         onChange={(value) =>
           dispatch({ type: 'updateNode', nodeKey: nodeKeyOf(node), patch: { name: value } })
         }

@@ -11,17 +11,18 @@ export interface GatewayPanelProps {
   /** 排他网关节点（type=4）或结束节点（type=9）等无专属配置的节点。 */
   node: FlowNode;
   dispatch: Dispatch<DraftAction>;
+  readOnly?: boolean;
 }
 
 /**
  * 网关/结束等无专属配置的节点面板：只给节点名。
  * 分支的增删与排序在画布上操作（GatewayBranches）。
  */
-export function GatewayPanel({ node, dispatch }: GatewayPanelProps) {
+export function GatewayPanel({ node, dispatch, readOnly }: GatewayPanelProps) {
   const { t } = useTranslation('workflow');
   return (
     <div className="flex flex-col gap-3">
-      <NodeNameField node={node} dispatch={dispatch} />
+      <NodeNameField node={node} dispatch={dispatch} disabled={readOnly} />
       <Typography.Text size="small" type="tertiary">
         {t('designer.panels.gatewayHint')}
       </Typography.Text>

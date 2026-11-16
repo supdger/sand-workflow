@@ -20,7 +20,10 @@ export function DesignerCanvas({ root, ...handlers }: DesignerCanvasProps) {
   const { t } = useTranslation('workflow');
   const tailIsEnd = chainTail(root).type === NODE_TYPE.END;
   return (
-    <div className="flex flex-col items-center overflow-auto py-8">
+    <div
+      className="flex flex-col items-center overflow-auto py-8"
+      style={handlers.readOnly ? { opacity: 0.85 } : undefined}
+    >
       <NodeChain node={root} {...handlers} />
       {tailIsEnd ? null : (
         <div

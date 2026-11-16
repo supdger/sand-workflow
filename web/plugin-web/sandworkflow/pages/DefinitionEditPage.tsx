@@ -104,9 +104,13 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const queryClient = useQueryClient();
 
   const canManage = definition === null || definition.can_manage !== false;
+  const canUpdate = useCan('sandworkflow:definition:update');
   const canSaveRow = useCan('sandworkflow:definition:save-draft');
   const canDiscard = useCan('sandworkflow:definition:discard-draft');
   const canPublish = useCan('sandworkflow:definition:publish');
+  // 只读判定看 RBAC 写权限码：canManage 是流程管理员维度，只管保存/发布
+  // 按钮的灰度，不能让画布呈现「看着能改实际存不了」的假可编辑状态。
+  const readOnly = !canUpdate;
 
   const hasDraft = definition?.has_draft === true;
   const initial = useMemo(() => draftSourceOf(definition), [definition]);
@@ -347,11 +351,13 @@ function DesignerBody({ definition }: DesignerBodyProps) {
           value={meta.name}
           maxLength={NAME_MAX}
           placeholder={t('designer.namePlaceholder')}
+          disabled={readOnly}
           style={{ width: 280 }}
           onChange={(value) => setMeta((prev) => ({ ...prev, name: value }))}
         />
         <Select
           value={meta.status}
+          disabled={readOnly}
           style={{ width: 110 }}
           onChange={(value) => setMeta((prev) => ({ ...prev, status: Number(value) }))}
         >
@@ -376,7 +382,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
         <Button theme="light" onClick={handleValidate}>
           {t('designer.validate')}
         </Button>
-        {canSaveRow ? (
+        {canSaveRow && !readOnly ? (
           <Button
             theme="light"
             loading={saveMutation.isPending}
@@ -386,7 +392,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
             {t('designer.save')}
           </Button>
         ) : null}
-        {canPublish ? (
+        {canPublish && !readOnly ? (
           <Button
             theme="solid"
             loading={publishMutation.isPending}
@@ -397,6 +403,9 @@ function DesignerBody({ definition }: DesignerBodyProps) {
           </Button>
         ) : null}
       </div>
+      {readOnly ? (
+        <Banner type="info" description={t('designer.readOnly')} className="mt-3" />
+      ) : null}
       {!canManage ? (
         <Banner type="warning" description={t('designer.notManager')} className="mt-3" />
       ) : hasDraft ? (
@@ -419,7 +428,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
             </div>
           }
         />
-      ) : (
+      ) : readOnly ? null : (
         <Typography.Text type="secondary" size="small" className="mt-2">
           {t('designer.saveHint')}
         </Typography.Text>
@@ -431,6 +440,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
             dispatch={dispatch}
             selectedKey={selectedFieldKey}
             onSelect={setSelectedFieldKey}
+            readOnly={readOnly}
           />
         ) : (
           <>
@@ -438,6 +448,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
               <DesignerCanvas
                 root={draft.nodeConfig}
                 selectedKey={selectedKey}
+                readOnly={readOnly}
                 onSelect={(key) => {
                   setSelectedKey(key);
                   setFlowSettingsOpen(false);
@@ -460,6 +471,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
                 meta={meta}
                 onMetaChange={(patch) => setMeta((prev) => ({ ...prev, ...patch }))}
                 dispatch={dispatch}
+                readOnly={readOnly}
               />
             ) : (
               <SettingsPanel
@@ -467,6 +479,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
                 dispatch={dispatch}
                 widgets={draft.flowWidgets}
                 conditionVars={conditionVars}
+                readOnly={readOnly}
               />
             )}
           </>

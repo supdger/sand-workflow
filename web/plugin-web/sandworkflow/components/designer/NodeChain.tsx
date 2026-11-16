@@ -22,7 +22,8 @@ export function NodeChain({ node, ...handlers }: NodeChainProps) {
     return null;
   }
   const key = nodeKeyOf(node);
-  const { onInsert } = handlers;
+  const { onInsert, readOnly } = handlers;
+  const onRemove = readOnly ? undefined : handlers.onRemove;
   return (
     <div className="flex flex-col items-center">
       {node.type === NODE_TYPE.EXCLUSIVE_GATEWAY ? (
@@ -31,7 +32,7 @@ export function NodeChain({ node, ...handlers }: NodeChainProps) {
             node={node}
             selected={handlers.selectedKey === key}
             onSelect={handlers.onSelect}
-            onRemove={handlers.onRemove}
+            onRemove={onRemove}
           />
           <div style={CONNECTOR_STYLE} />
           <GatewayBranches gateway={node} {...handlers} />
@@ -41,12 +42,12 @@ export function NodeChain({ node, ...handlers }: NodeChainProps) {
           node={node}
           selected={handlers.selectedKey === key}
           onSelect={handlers.onSelect}
-          onRemove={handlers.onRemove}
+          onRemove={onRemove}
         />
       )}
       <div style={CONNECTOR_STYLE} />
-      <NodeInsertButton onInsert={(type) => onInsert(key, type)} />
-      <div style={CONNECTOR_STYLE} />
+      {readOnly ? null : <NodeInsertButton onInsert={(type) => onInsert(key, type)} />}
+      {readOnly ? null : <div style={CONNECTOR_STYLE} />}
       <NodeChain node={node.childNode} {...handlers} />
     </div>
   );

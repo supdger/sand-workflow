@@ -44,6 +44,7 @@ export interface AssigneePanelProps {
   widgets: FlowWidget[];
   /** 全树被条件引用的字段名。 */
   conditionVars: Set<string>;
+  readOnly?: boolean;
 }
 
 interface RuleRowProps {
@@ -51,6 +52,7 @@ interface RuleRowProps {
   rule: AssigneeRule;
   /** 该节点当前规则总数：发起人自选必须独占节点，多于 1 条时不给选。 */
   ruleCount: number;
+  readOnly?: boolean;
   dispatch: Dispatch<DraftAction>;
   onChange: (rule: AssigneeRule) => void;
   onRemove: () => void;
@@ -75,7 +77,7 @@ function ruleTypeLabel(ruleType: number, t: (key: string) => string): string {
   }
 }
 
-function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRowProps) {
+function RuleRow({ node, rule, ruleCount, readOnly, dispatch, onChange, onRemove }: RuleRowProps) {
   const { t } = useTranslation('workflow');
   const fields = assigneeFields(node.type);
   const ruleType = ruleTypeOf(rule);
@@ -116,6 +118,7 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
           <Select
             size="small"
             value={ruleType}
+            disabled={readOnly}
             style={{ width: 190 }}
             onChange={(next) => changeType(Number(next))}
           >
@@ -137,6 +140,7 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
           theme="borderless"
           type="danger"
           aria-label={t('designer.panels.ruleDelete')}
+          disabled={readOnly}
           onClick={onRemove}
         />
       </div>
@@ -148,12 +152,14 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
       {ruleType === ASSIGNEE_TYPE.ASSIGNEE ? (
         <UserPicker
           value={memberIds(rule[fields.membersKey] as AssigneeRule['assignees'])}
+          disabled={readOnly}
           onChange={(ids) => setRule({ [fields.membersKey]: ids.map((id) => ({ id })) })}
         />
       ) : null}
       {ruleType === ASSIGNEE_TYPE.ROLE ? (
         <RolePicker
           value={rule.roles ?? []}
+          disabled={readOnly}
           onChange={(ids) => setRule({ roles: ids.map(Number) })}
         />
       ) : null}
@@ -163,6 +169,7 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
           <RadioGroup
             type="button"
             value={rule.layerType ?? 0}
+            disabled={readOnly}
             onChange={(event) => setRule({ layerType: Number(event.target.value) })}
           >
             <Radio value={0}>{t('designer.panels.layerUp')}</Radio>
@@ -177,6 +184,7 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
               min={0}
               max={20}
               value={rule.layer ?? 1}
+              disabled={readOnly}
               style={{ width: 90 }}
               onChange={(next) => setRule({ layer: Number(next) || 0 })}
             />
@@ -205,7 +213,7 @@ function RuleRow({ node, rule, ruleCount, dispatch, onChange, onRemove }: RuleRo
  * + 老数据直通形态只读）、多人处理方式三档（0/2 合并展示为或签，
  * 含自选规则时落 2）、signable/backable 能力开关。
  */
-export function AssigneePanel({ node, dispatch, widgets, conditionVars }: AssigneePanelProps) {
+export function AssigneePanel({ node, dispatch, widgets, conditionVars, readOnly }: AssigneePanelProps) {
   const { t } = useTranslation('workflow');
   const nodeKey = nodeKeyOf(node);
   const fields = assigneeFields(node.type);
@@ -240,7 +248,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
 
   return (
     <div className="flex flex-col gap-3">
-      <NodeNameField node={node} dispatch={dispatch} />
+      <NodeNameField node={node} dispatch={dispatch} disabled={readOnly} />
 
       <div className="flex items-center justify-between">
         <Typography.Text strong size="small">
@@ -270,7 +278,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
             icon={<IconPlus />}
             size="small"
             theme="light"
-            disabled={hasChoice}
+            disabled={hasChoice || readOnly}
             aria-label={t('designer.panels.ruleAdd')}
           >
             {t('designer.panels.ruleAdd')}
@@ -287,6 +295,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
             node={node}
             rule={rule}
             ruleCount={rules.length}
+            readOnly={readOnly}
             dispatch={dispatch}
             onChange={(next) => setRule(index, next)}
             onRemove={() => removeRule(index)}
@@ -300,7 +309,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
         </Typography.Text>
         <Select
           value={multi}
-          disabled={hasMultistep}
+          disabled={hasMultistep || readOnly}
           style={{ width: '100%' }}
           onChange={(next) =>
             dispatch({
@@ -327,7 +336,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
           <Switch
             size="small"
             checked={node.signable === 1}
-            disabled={multi === 3}
+            disabled={multi === 3 || readOnly}
             onChange={(checked) =>
               dispatch({ type: 'updateNode', nodeKey, patch: { signable: checked ? 1 : 0 } })
             }
@@ -343,6 +352,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
           <Switch
             size="small"
             checked={node.backable === 1}
+            disabled={readOnly}
             onChange={(checked) =>
               dispatch({ type: 'updateNode', nodeKey, patch: { backable: checked ? 1 : 0 } })
             }
@@ -355,6 +365,7 @@ export function AssigneePanel({ node, dispatch, widgets, conditionVars }: Assign
         widgets={widgets}
         conditionVars={conditionVars}
         canEdit
+        readOnly={readOnly}
         dispatch={dispatch}
       />
     </div>

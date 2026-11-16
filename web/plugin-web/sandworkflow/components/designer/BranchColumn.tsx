@@ -113,7 +113,7 @@ export function BranchColumn({
       <div style={STUB_STYLE} />
       {branch.childNode ? (
         <NodeChain node={branch.childNode} {...handlers} />
-      ) : (
+      ) : handlers.readOnly ? null : (
         <NodeInsertButton onInsert={(type) => handlers.onInsert(branchKey, type)} />
       )}
     </div>

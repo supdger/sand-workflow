@@ -6,6 +6,8 @@ import { isUnavailableType, WIDGET_PALETTE, widgetTypeLabel } from '../../model/
 export interface WidgetPaletteProps {
   /** 点中某个控件类型时回调；控件由上层创建并插到列表尾。 */
   onAdd: (type: number) => void;
+  /** 页面只读：控件按钮置灰，仍能看到可选类型清单。 */
+  disabled?: boolean;
 }
 
 /**
@@ -13,7 +15,7 @@ export interface WidgetPaletteProps {
  * （type=14 空缺跳过）；发起端没接数据的控件带「暂不可用」标记
  * （I-07），仍允许加进表单，由发起页的禁用占位兜住。
  */
-export function WidgetPalette({ onAdd }: WidgetPaletteProps) {
+export function WidgetPalette({ onAdd, disabled }: WidgetPaletteProps) {
   const { t } = useTranslation('workflow');
   return (
     <div
@@ -29,6 +31,7 @@ export function WidgetPalette({ onAdd }: WidgetPaletteProps) {
           theme="light"
           size="small"
           className="justify-start"
+          disabled={disabled}
           onClick={() => onAdd(type)}
         >
           <span className="flex w-full items-center justify-between gap-1">

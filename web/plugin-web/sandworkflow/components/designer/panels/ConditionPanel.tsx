@@ -23,11 +23,13 @@ export interface ConditionPanelProps {
   dispatch: Dispatch<DraftAction>;
   /** 草稿的 flowWidgets，条件左值从这里取可比较字段。 */
   widgets: FlowWidget[];
+  readOnly?: boolean;
 }
 
 interface ConditionRowProps {
   condition: FlowCondition;
   widgets: FlowWidget[];
+  readOnly?: boolean;
   onChange: (condition: FlowCondition) => void;
   onRemove: () => void;
 }
@@ -59,7 +61,7 @@ function toTextList(val: unknown): string[] {
   return [];
 }
 
-function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowProps) {
+function ConditionRow({ condition, widgets, readOnly, onChange, onRemove }: ConditionRowProps) {
   const { t } = useTranslation('workflow');
   const widget = widgets.find((item) => item.name === condition.varName);
   const operators = widget ? operatorsForWidget(widget.type) : [];
@@ -94,6 +96,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
         <InputNumber
           size="small"
           value={typeof condition.val === 'number' ? condition.val : undefined}
+          disabled={readOnly}
           style={{ width: '100%' }}
           onChange={(next) => setValue({ val: typeof next === 'number' ? next : 0 })}
         />
@@ -107,6 +110,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
             size="small"
             value={toTextList(condition.val)}
             optionList={options.map((option) => ({ value: option, label: option }))}
+            disabled={readOnly}
             style={{ width: '100%' }}
             onChange={(next) => setValue({ val: Array.isArray(next) ? next : [] })}
           />
@@ -117,6 +121,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
           size="small"
           value={toTextList(condition.val)}
           placeholder={t('designer.panels.setValueHint')}
+          disabled={readOnly}
           onChange={(next) => setValue({ val: next })}
         />
       );
@@ -128,6 +133,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
           size="small"
           value={typeof condition.val === 'string' ? condition.val : String(condition.val ?? '')}
           optionList={options.map((option) => ({ value: option, label: option }))}
+          disabled={readOnly}
           style={{ width: '100%' }}
           onChange={(next) => setValue({ val: next })}
         />
@@ -137,6 +143,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
       <Input
         size="small"
         value={typeof condition.val === 'string' ? condition.val : String(condition.val ?? '')}
+        disabled={readOnly}
         onChange={(next) => setValue({ val: next })}
       />
     );
@@ -150,6 +157,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
           value={condition.varName}
           optionList={fieldOptions}
           validateStatus={widgetMissing || !condition.varName ? 'warning' : 'default'}
+          disabled={readOnly}
           style={{ width: '40%', minWidth: 0 }}
           onChange={(next) => {
             const name = String(next);
@@ -164,6 +172,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
         <Select
           size="small"
           value={condition.operator}
+          disabled={readOnly}
           style={{ width: '30%', minWidth: 0 }}
           onChange={(next) => onChange(retargetCondition(condition, Number(next)))}
         >
@@ -180,6 +189,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
           theme="borderless"
           type="danger"
           aria-label={t('designer.panels.conditionDelete')}
+          disabled={readOnly}
           onClick={onRemove}
         />
       </div>
@@ -196,7 +206,7 @@ function ConditionRow({ condition, widgets, onChange, onRemove }: ConditionRowPr
  * 条件分支（type=3）的条件表达式编辑器：conditionGroups 组间 OR、
  * 组内 AND（契约 §2.8）；空 conditionGroups = 默认分支，不给条件编辑。
  */
-export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps) {
+export function ConditionPanel({ node, dispatch, widgets, readOnly }: ConditionPanelProps) {
   const { t } = useTranslation('workflow');
   const nodeKey = nodeKeyOf(node);
   const groups = node.conditionGroups ?? [];
@@ -236,7 +246,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
   if (isDefaultBranch(node)) {
     return (
       <div className="flex flex-col gap-3">
-        <NodeNameField node={node} dispatch={dispatch} />
+        <NodeNameField node={node} dispatch={dispatch} disabled={readOnly} />
         <Banner type="info" description={t('designer.panels.defaultBranchHint')} />
       </div>
     );
@@ -244,7 +254,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
 
   return (
     <div className="flex flex-col gap-3">
-      <NodeNameField node={node} dispatch={dispatch} />
+      <NodeNameField node={node} dispatch={dispatch} disabled={readOnly} />
       <div className="flex items-center justify-between">
         <Typography.Text strong size="small">
           {t('designer.panels.conditionGroups')}
@@ -253,7 +263,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
           icon={<IconPlus />}
           size="small"
           theme="light"
-          disabled={fields.length === 0}
+          disabled={fields.length === 0 || readOnly}
           onClick={() => {
             const first = fields[0];
             if (first) {
@@ -293,6 +303,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
                 theme="borderless"
                 type="danger"
                 aria-label={t('designer.panels.groupDelete')}
+                disabled={readOnly}
                 onClick={() => setGroups(groups.filter((_, i) => i !== groupIndex))}
               />
             </div>
@@ -301,6 +312,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
                 key={index}
                 condition={condition}
                 widgets={fields}
+                readOnly={readOnly}
                 onChange={(next) => setCondition(groupIndex, index, next)}
                 onRemove={() =>
                   setGroup(groupIndex, {
@@ -314,7 +326,7 @@ export function ConditionPanel({ node, dispatch, widgets }: ConditionPanelProps)
               icon={<IconPlus />}
               size="small"
               theme="borderless"
-              disabled={fields.length === 0}
+              disabled={fields.length === 0 || readOnly}
               onClick={() => addCondition(groupIndex)}
             >
               {t('designer.panels.conditionAdd')}

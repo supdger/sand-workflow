@@ -31,29 +31,32 @@ export function GatewayBranches({ gateway, ...handlers }: GatewayBranchesProps) 
       {branches.map((branch, index) => {
         const isDefault = isDefaultBranch(branch);
         const next = branches[index + 1];
+        const writable = !handlers.readOnly;
         return (
           <BranchColumn
             key={nodeKeyOf(branch)}
             branch={branch}
             gatewayKey={gatewayKey}
-            canRemove={branches.length > 2}
-            canMoveLeft={!isDefault && index > 0}
-            canMoveRight={!isDefault && next !== undefined && !isDefaultBranch(next)}
+            canRemove={writable && branches.length > 2}
+            canMoveLeft={writable && !isDefault && index > 0}
+            canMoveRight={writable && !isDefault && next !== undefined && !isDefaultBranch(next)}
             {...handlers}
           />
         );
       })}
-      <div className="flex flex-col items-center self-stretch pt-2">
-        <Tooltip content={t('designer.branch.add')} position="top">
-          <Button
-            icon={<IconPlus />}
-            size="small"
-            theme="light"
-            aria-label={t('designer.branch.add')}
-            onClick={() => handlers.onAddBranch(gatewayKey)}
-          />
-        </Tooltip>
-      </div>
+      {handlers.readOnly ? null : (
+        <div className="flex flex-col items-center self-stretch pt-2">
+          <Tooltip content={t('designer.branch.add')} position="top">
+            <Button
+              icon={<IconPlus />}
+              size="small"
+              theme="light"
+              aria-label={t('designer.branch.add')}
+              onClick={() => handlers.onAddBranch(gatewayKey)}
+            />
+          </Tooltip>
+        </div>
+      )}
     </div>
   );
 }

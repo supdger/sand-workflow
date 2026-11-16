@@ -27,6 +27,7 @@ export interface CopyPanelProps {
   widgets: FlowWidget[];
   /** 全树被条件引用的字段名。 */
   conditionVars: Set<string>;
+  readOnly?: boolean;
 }
 
 function ccTypeLabel(ccType: number | undefined, t: (key: string) => string): string {
@@ -46,7 +47,7 @@ function ccTypeLabel(ccType: number | undefined, t: (key: string) => string): st
  * 抄送节点的抄送人设置：契约只放行 ccType 0/3/4 与 {id} 直通
  * （§2.5），直通形态与非法 ccType 的老数据只读展示不产出。
  */
-export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelProps) {
+export function CopyPanel({ node, dispatch, widgets, conditionVars, readOnly }: CopyPanelProps) {
   const { t } = useTranslation('workflow');
   const nodeKey = nodeKeyOf(node);
   const rules = node.ccs ?? [];
@@ -61,7 +62,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
 
   return (
     <div className="flex flex-col gap-3">
-      <NodeNameField node={node} dispatch={dispatch} />
+      <NodeNameField node={node} dispatch={dispatch} disabled={readOnly} />
 
       <div className="flex items-center justify-between">
         <Typography.Text strong size="small">
@@ -84,6 +85,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
             icon={<IconPlus />}
             size="small"
             theme="light"
+            disabled={readOnly}
             aria-label={t('designer.panels.ruleAdd')}
           >
             {t('designer.panels.ruleAdd')}
@@ -95,7 +97,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
         <Banner type="warning" description={t('designer.panels.ccsEmpty')} />
       ) : (
         rules.map((rule, index) => {
-          const readonly = isDirectRule(rule) ||
+          const locked = isDirectRule(rule) ||
             (rule.ccType !== undefined && !CC_RULE_CHOICES.includes(rule.ccType as 0 | 3 | 4));
           return (
             <div
@@ -104,7 +106,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
               style={{ borderColor: 'var(--semi-color-border)' }}
             >
               <div className="flex items-center justify-between gap-2">
-                {readonly ? (
+                {locked ? (
                   <Tag size="small" color={isDirectRule(rule) ? 'grey' : 'red'}>
                     {isDirectRule(rule)
                       ? t('designer.panels.ruleDirect')
@@ -114,6 +116,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
                   <Select
                     size="small"
                     value={rule.ccType}
+                    disabled={readOnly}
                     style={{ width: 190 }}
                     onChange={(next) => setRule(index, createCcRule(Number(next)))}
                   >
@@ -130,10 +133,11 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
                   theme="borderless"
                   type="danger"
                   aria-label={t('designer.panels.ruleDelete')}
+                  disabled={readOnly}
                   onClick={() => setRules(rules.filter((_, i) => i !== index))}
                 />
               </div>
-              {readonly ? (
+              {locked ? (
                 <Typography.Text size="small" type="secondary">
                   {isDirectRule(rule)
                     ? t('designer.panels.ruleDirectHint')
@@ -143,12 +147,14 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
               {rule.ccType === ASSIGNEE_TYPE.ASSIGNEE ? (
                 <UserPicker
                   value={memberIds(rule.assignees)}
+                  disabled={readOnly}
                   onChange={(ids) => setRule(index, { ...rule, assignees: ids.map((id) => ({ id })) })}
                 />
               ) : null}
               {rule.ccType === ASSIGNEE_TYPE.ROLE ? (
                 <RolePicker
                   value={rule.roles ?? []}
+                  disabled={readOnly}
                   onChange={(ids) => setRule(index, { ...rule, roles: ids.map(Number) })}
                 />
               ) : null}
@@ -167,6 +173,7 @@ export function CopyPanel({ node, dispatch, widgets, conditionVars }: CopyPanelP
         widgets={widgets}
         conditionVars={conditionVars}
         canEdit={false}
+        readOnly={readOnly}
         dispatch={dispatch}
       />
     </div>

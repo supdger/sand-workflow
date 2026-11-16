@@ -38,6 +38,8 @@ export interface FormDesignerProps {
   /** 选中控件的编辑键（widgetKeyOf）；null 未选中。 */
   selectedKey: string | null;
   onSelect: (key: string | null) => void;
+  /** 页面只读（无 RBAC 写权限码）：控件库与字段操作收起，仅可点选查看。 */
+  readOnly?: boolean;
 }
 
 /**
@@ -137,7 +139,7 @@ function FieldPreview({ widget }: { widget: FlowWidget }) {
  * 表单设计器：左控件面板 / 中字段预览列表 / 右字段属性面板（F-21）。
  * 字段变换全部走 model/widgets 纯函数经 dispatch 写回草稿。
  */
-export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormDesignerProps) {
+export function FormDesigner({ widgets, dispatch, selectedKey, onSelect, readOnly }: FormDesignerProps) {
   const { t } = useTranslation('workflow');
   const dupNames = duplicateNames(widgets);
   const selectedIndex = widgets.findIndex((widget) => widgetKeyOf(widget) === selectedKey);
@@ -161,7 +163,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
 
   return (
     <div className="flex w-full items-stretch gap-0">
-      <WidgetPalette onAdd={handleAdd} />
+      <WidgetPalette onAdd={handleAdd} disabled={readOnly} />
       <div className="flex-1 overflow-auto px-6 py-4">
         {widgets.length === 0 ? (
           <Empty title={t('designer.form.empty')} />
@@ -221,7 +223,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
                         icon={<IconArrowUp />}
                         size="small"
                         theme="borderless"
-                        disabled={index === 0}
+                        disabled={index === 0 || readOnly}
                         aria-label={t('designer.form.moveUp')}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -232,7 +234,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
                         icon={<IconArrowDown />}
                         size="small"
                         theme="borderless"
-                        disabled={index === widgets.length - 1}
+                        disabled={index === widgets.length - 1 || readOnly}
                         aria-label={t('designer.form.moveDown')}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -243,6 +245,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
                         icon={<IconCopy />}
                         size="small"
                         theme="borderless"
+                        disabled={readOnly}
                         aria-label={t('designer.form.fieldDuplicate')}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -259,6 +262,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
                         size="small"
                         theme="borderless"
                         type="danger"
+                        disabled={readOnly}
                         aria-label={t('designer.form.fieldDelete')}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -279,6 +283,7 @@ export function FormDesigner({ widgets, dispatch, selectedKey, onSelect }: FormD
       <FieldPanel
         widget={selected ?? null}
         widgets={widgets}
+        readOnly={readOnly}
         onPatch={(patch) => {
           if (selectedIndex >= 0) {
             setWidgets(updateWidgetAt(widgets, selectedIndex, patch));

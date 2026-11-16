@@ -153,6 +153,23 @@ async function request<T>(
   }
 
   if (!res.ok || status >= 500) {
+    // 非 5xx 且带业务信封（如鉴权层 403「权限不足」）：按业务错误透传 message，
+    // 让调用方提示后端原文，不归成「系统出了点问题」。
+    if (
+      status < 500 &&
+      typeof payload?.code === 'number' &&
+      typeof payload.message === 'string' &&
+      payload.message !== ''
+    ) {
+      throw new PluginApiError({
+        code: payload.code,
+        message: payload.message,
+        httpStatus: status,
+        method,
+        url,
+        system: false,
+      });
+    }
     throw systemError(
       { code: typeof payload?.code === 'number' ? payload.code : undefined, method, url, httpStatus: status },
       false,

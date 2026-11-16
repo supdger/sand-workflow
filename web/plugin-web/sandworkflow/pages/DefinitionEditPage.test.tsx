@@ -57,6 +57,45 @@ function useEditHandlers(): void {
   );
 }
 
+/**
+ * /me 覆盖成只有查看码的账号：mock 用户表里没有插件权限组合的现成身份，
+ * 测试直接回 v1 信封 {data, request_id}，useCan 只读 permissions。
+ */
+function useReadOnlyMe(): void {
+  server.use(
+    http.get('*/api/admin/v1/me', () =>
+      HttpResponse.json({
+        data: {
+          id: 'u-reader',
+          username: 'reader',
+          nickname: '只读用户',
+          permissions: [
+            'sandworkflow:definition:index',
+            'sandworkflow:definition:read',
+            'sandworkflow:group:all',
+            'sandworkflow:index:list-users',
+            'sandworkflow:index:list-roles',
+            'sandworkflow:index:list-depts',
+          ],
+        },
+        request_id: 'test-reader',
+      }),
+    ),
+    http.get(`${PLUGIN_API}/group/all`, () =>
+      HttpResponse.json({ code: 200, message: 'ok', data: [] }),
+    ),
+    http.get(`${PLUGIN_API}/index/listUsers`, () =>
+      HttpResponse.json({ code: 200, message: 'ok', data: [] }),
+    ),
+    http.get(`${PLUGIN_API}/index/listRoles`, () =>
+      HttpResponse.json({ code: 200, message: 'ok', data: [] }),
+    ),
+    http.get(`${PLUGIN_API}/index/listDepts`, () =>
+      HttpResponse.json({ code: 200, message: 'ok', data: [] }),
+    ),
+  );
+}
+
 function renderEditPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -148,5 +187,53 @@ describe('DefinitionEditPage', () => {
     expect(await screen.findByText(NETWORK_ERROR_TEXT)).toBeInTheDocument();
     expect(discardCalls).toBe(1);
     expect(screen.getByText('直属主管审批')).toBeInTheDocument();
+  });
+
+  it('只有查看码的用户进设计器：只读横幅、控件禁用、画布无增删改入口', async () => {
+    setToken('mock-reader-token');
+    useEditHandlers();
+    useReadOnlyMe();
+    renderEditPage();
+
+    // 顶部「只读，无编辑权限」标识；画布节点照常可看。
+    expect(await screen.findByText('只读，无编辑权限')).toBeInTheDocument();
+    expect(await screen.findByText('直属主管审批')).toBeInTheDocument();
+    // 顶栏流程名/状态禁用，保存/发布入口不出现。
+    expect(screen.getByPlaceholderText('流程名称')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: '保存' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '发布' })).not.toBeInTheDocument();
+    // 画布增删改入口全部不收：插节点、删节点、加分支。
+    expect(screen.queryAllByRole('button', { name: '插入节点' })).toHaveLength(0);
+    expect(screen.queryAllByRole('button', { name: '删除节点' })).toHaveLength(0);
+    expect(screen.queryAllByRole('button', { name: '添加分支' })).toHaveLength(0);
+    // 点选节点仍可查看配置，但属性面板全部禁用。
+    await userEvent.click(screen.getByText('直属主管审批'));
+    expect(await screen.findByDisplayValue('直属主管审批')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /添加处理方式/ })).toBeDisabled();
+    // 流程设置面板同样全部禁用。
+    await userEvent.click(screen.getByRole('button', { name: '流程设置' }));
+    expect(
+      await screen.findByPlaceholderText('给使用人看看这个流程是干什么的'),
+    ).toBeDisabled();
+  });
+
+  it('保存草稿后端回 HTTP 403 时提示透传后端 message', async () => {
+    setToken('mock-admin-token');
+    useEditHandlers();
+    server.use(
+      http.post(`${PLUGIN_API}/definition/saveDraft`, () =>
+        HttpResponse.json(
+          { code: 403, message: '权限不足，无法访问或操作', data: null },
+          { status: 403 },
+        ),
+      ),
+    );
+    renderEditPage();
+
+    await screen.findByText('直属主管审批');
+    await userEvent.click(await screen.findByRole('button', { name: '保存' }));
+
+    expect(await screen.findByText('权限不足，无法访问或操作')).toBeInTheDocument();
+    expect(screen.queryByText('系统出了点问题，请稍后再试')).not.toBeInTheDocument();
   });
 });

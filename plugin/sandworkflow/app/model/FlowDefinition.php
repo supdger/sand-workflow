@@ -9,7 +9,7 @@ class FlowDefinition extends BaseModel
 {
     protected $pk = 'id';
     protected $table = 'sand_workflow_definition';
-    protected $json = ['definition_json'];
+    protected $json = ['definition_json', 'draft_json'];
     protected $jsonAssoc = true;
     protected $append = ['group_name'];
 

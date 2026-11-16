@@ -4,9 +4,8 @@ declare(strict_types=1);
 namespace plugin\sandworkflow\app\logic;
 
 use plugin\sandadmin\basic\think\BaseLogic;
-use plugin\sandadmin\app\model\system\SystemUser;
-use plugin\sandadmin\app\model\system\SystemUserRole;
 use plugin\sandadmin\exception\ApiException;
+use plugin\sandworkflow\app\support\HostOrg;
 use plugin\sandworkflow\app\model\FlowDefinition;
 use plugin\sandworkflow\app\model\FlowDefinitionVersion;
 use plugin\sandworkflow\app\model\FlowInstance;
@@ -16,7 +15,10 @@ use plugin\sandworkflow\app\model\FlowTaskAssignee;
 use plugin\sandworkflow\app\contract\ActorRef;
 use plugin\sandworkflow\app\contract\WorkflowStartContext;
 use plugin\sandworkflow\app\service\FormValueWriteGuard;
+use plugin\sandworkflow\app\service\InitiatorScopePolicy;
+use plugin\sandworkflow\app\service\InstanceSnapshotPolicy;
 use plugin\sandworkflow\app\service\OrganizationParticipantMaterializer;
+use plugin\sandworkflow\app\service\ViewerScopeFactory;
 use plugin\sandworkflow\common\FlowConstant;
 use support\think\Db;
 
@@ -66,9 +68,13 @@ class InstanceLogic extends BaseLogic
         if (empty($definition->getAttr('publish_time'))) {
             throw new ApiException('流程定义尚未发布');
         }
+        $definitionJson = $definition->getAttr('definition_json');
+        $definitionJson = is_array($definitionJson) ? $definitionJson : [];
+        if (!InitiatorScopePolicy::canInitiate($definitionJson, $this->viewerScope($actor))) {
+            throw new ApiException('当前用户不在该流程的发起范围内');
+        }
 
-        return Db::transaction(function () use ($data, $definition, $definitionId, $requestId, $actor) {
-            $definitionJson = $definition->getAttr('definition_json') ?: [];
+        return Db::transaction(function () use ($data, $definition, $definitionId, $definitionJson, $requestId, $actor) {
             $version = FlowDefinitionVersion::where('definition_id', $definitionId)
                 ->where('version_no', (int) $definition->getAttr('current_version'))
                 ->findOrEmpty();
@@ -110,6 +116,7 @@ class InstanceLogic extends BaseLogic
                 'form_value' => $formValue,
                 'act_node_id' => $firstNode ? $this->nodeIdentity($firstNode) : 'end',
                 'flow_status' => FlowConstant::STATUS['UNDERWAY'],
+                'is_cancelable' => (int) ($definition->getAttr('is_cancelable') ?? 1),
             ]);
 
             FlowLog::create([
@@ -526,10 +533,8 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('当前用户不是该任务的待办处理人');
             }
 
-            $targetUser = SystemUser::where('id', (int) $targetAccountId)
-                ->where('status', 1)
-                ->findOrEmpty();
-            if ($targetUser->isEmpty()) {
+            $targetUser = HostOrg::findUser((int) $targetAccountId);
+            if ($targetUser === null || (int) ($targetUser['status'] ?? 0) !== 1) {
                 throw new ApiException('目标处理人不存在或已停用');
             }
             $duplicatedTarget = FlowTaskAssignee::where('task_id', $taskId)
@@ -540,14 +545,14 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('目标处理人已在当前任务中');
             }
 
-            $sourceUser = SystemUser::where('id', (int) $actor->accountId)->findOrEmpty();
+            $sourceUser = HostOrg::findUser((int) $actor->accountId);
             $sourceRef = new ActorRef('sandadmin', $actor->accountId, [
-                'name' => $sourceUser->isEmpty()
+                'name' => $sourceUser === null
                     ? $actor->accountId
-                    : (string) ($sourceUser->getAttr('realname') ?: $sourceUser->getAttr('username')),
+                    : HostOrg::displayName($sourceUser, $actor->accountId),
             ]);
             $targetRef = new ActorRef('sandadmin', $targetAccountId, [
-                'name' => (string) ($targetUser->getAttr('realname') ?: $targetUser->getAttr('username')),
+                'name' => HostOrg::displayName($targetUser, $targetAccountId),
             ]);
             $now = date('Y-m-d H:i:s');
 
@@ -686,20 +691,18 @@ class InstanceLogic extends BaseLogic
             $this->assertTaskAssignee($task);
             $this->assertTaskSignable($task, $instance);
 
-            $targetUser = SystemUser::where('id', (int) $targetAccountId)
-                ->where('status', 1)
-                ->findOrEmpty();
-            if ($targetUser->isEmpty()) {
+            $targetUser = HostOrg::findUser((int) $targetAccountId);
+            if ($targetUser === null || (int) ($targetUser['status'] ?? 0) !== 1) {
                 throw new ApiException('目标处理人不存在或已停用');
             }
             $targetRef = new ActorRef('sandadmin', $targetAccountId, [
-                'name' => (string) ($targetUser->getAttr('realname') ?: $targetUser->getAttr('username')),
+                'name' => HostOrg::displayName($targetUser, $targetAccountId),
             ]);
-            $operatorUser = SystemUser::where('id', (int) $actor->accountId)->findOrEmpty();
+            $operatorUser = HostOrg::findUser((int) $actor->accountId);
             $operatorRef = new ActorRef('sandadmin', $actor->accountId, [
-                'name' => $operatorUser->isEmpty()
+                'name' => $operatorUser === null
                     ? $actor->accountId
-                    : (string) ($operatorUser->getAttr('realname') ?: $operatorUser->getAttr('username')),
+                    : HostOrg::displayName($operatorUser, $actor->accountId),
             ]);
             $now = date('Y-m-d H:i:s');
 
@@ -1027,8 +1030,14 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('当前流程不能撤销');
             }
 
-            $definition = FlowDefinition::findOrEmpty((int) $instance->getAttr('definition_id'));
-            if ($definition->isEmpty() || (int) $definition->getAttr('is_cancelable') !== 1) {
+            // is_cancelable 列是发起时冻结的值；NULL 的存量实例回落到活定义（升级前行为）。
+            $cancelable = $instance->getAttr('is_cancelable');
+            $liveCancelable = null;
+            if ($cancelable === null) {
+                $definition = FlowDefinition::findOrEmpty((int) $instance->getAttr('definition_id'));
+                $liveCancelable = $definition->isEmpty() ? 0 : $definition->getAttr('is_cancelable');
+            }
+            if (!InstanceSnapshotPolicy::cancelable($cancelable, $liveCancelable)) {
                 throw new ApiException('该流程不允许撤销');
             }
 
@@ -1320,15 +1329,20 @@ class InstanceLogic extends BaseLogic
         if ($instance->isEmpty()) {
             throw new ApiException('流程实例不存在');
         }
-        $definitionJson = $instance->getAttr('definition_snapshot') ?: [];
-        if ($definitionJson === []) {
+        $snapshot = $instance->getAttr('definition_snapshot');
+        $live = null;
+        if (!is_array($snapshot) || $snapshot === []) {
             $definition = FlowDefinition::findOrEmpty((int) $task->getAttr('definition_id'));
             if ($definition->isEmpty()) {
                 throw new ApiException('流程定义不存在');
             }
             $this->assertScope($instance);
-            $definitionJson = $definition->getAttr('definition_json') ?: [];
+            $live = $definition->getAttr('definition_json');
         }
+        $definitionJson = InstanceSnapshotPolicy::definitionJson(
+            is_array($snapshot) ? $snapshot : null,
+            is_array($live) ? $live : null
+        );
         $nodeConfig = $definitionJson['nodeConfig'] ?? null;
         if (!is_array($nodeConfig)) {
             return ['task' => null, 'copies' => []];
@@ -1502,7 +1516,7 @@ class InstanceLogic extends BaseLogic
             } elseif ($type === FlowConstant::ASSIGNEE['ROLE']) {
                 $roleIds = array_values(array_filter(array_map('intval', (array) ($item['roles'] ?? []))));
                 if ($roleIds !== []) {
-                    foreach (SystemUserRole::whereIn('role_id', $roleIds)->column('user_id') as $userId) {
+                    foreach (HostOrg::roleUserIds($roleIds) as $userId) {
                         $refs[] = (new ActorRef('sandadmin', (string) $userId))->toArray();
                     }
                 }
@@ -1580,10 +1594,7 @@ class InstanceLogic extends BaseLogic
             } elseif ($type === FlowConstant::ASSIGNEE['ROLE']) {
                 $roleIds = array_values(array_filter(array_map('intval', (array) ($rule['roles'] ?? []))));
                 if ($roleIds !== []) {
-                    $userIds = array_merge(
-                        $userIds,
-                        array_map('intval', SystemUserRole::whereIn('role_id', $roleIds)->column('user_id'))
-                    );
+                    $userIds = array_merge($userIds, HostOrg::roleUserIds($roleIds));
                 }
             } elseif ($type === FlowConstant::ASSIGNEE['ASSIGNEE']) {
                 foreach ((array) ($rule['assignees'] ?? []) as $assignee) {
@@ -1597,13 +1608,12 @@ class InstanceLogic extends BaseLogic
         if ($userIds === []) {
             throw new ApiException('抄送节点未解析到有效接收人');
         }
-        $users = SystemUser::whereIn('id', $userIds)
-            ->where('status', 1)
-            ->select()
-            ->toArray();
         $userMap = [];
-        foreach ($users as $user) {
-            $userMap[(int) $user['id']] = $user;
+        foreach ($userIds as $candidateId) {
+            $user = HostOrg::findUser($candidateId);
+            if ($user !== null && (int) ($user['status'] ?? 0) === 1) {
+                $userMap[$candidateId] = $user;
+            }
         }
         $refs = [];
         foreach ($userIds as $userId) {
@@ -1612,7 +1622,7 @@ class InstanceLogic extends BaseLogic
                 continue;
             }
             $refs[] = (new ActorRef('sandadmin', (string) $userId, [
-                'name' => (string) (($user['realname'] ?? '') ?: ($user['username'] ?? $userId)),
+                'name' => HostOrg::displayName($user, $userId),
             ]))->toArray();
         }
         if ($refs === []) {
@@ -1839,6 +1849,24 @@ class InstanceLogic extends BaseLogic
             throw new ApiException('请先登录后再操作流程');
         }
         return new ActorRef('sandadmin', $accountId);
+    }
+
+    /**
+     * 发起范围判定视图：sandadmin 账户查宿主部门/角色；其他账户域没有组织数据源，
+     * 只能命中 user 类型条目。
+     * @return array{account_id:string,dept_ids:list<int>,role_ids:list<int>,is_super:bool}
+     */
+    private function viewerScope(ActorRef $actor): array
+    {
+        if ($actor->accountSpace === 'sandadmin') {
+            return ViewerScopeFactory::build($actor);
+        }
+        return [
+            'account_id' => $actor->accountId,
+            'dept_ids' => [],
+            'role_ids' => [],
+            'is_super' => false,
+        ];
     }
 
     private function withContext(ActorRef $actor, array $scope, array $participants, callable $callback): mixed

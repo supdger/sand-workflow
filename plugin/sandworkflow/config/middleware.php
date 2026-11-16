@@ -1,8 +1,8 @@
 <?php
 
-use plugin\sandadmin\app\middleware\CheckAuth;
 use plugin\sandadmin\app\middleware\CheckLogin;
 use plugin\sandadmin\app\middleware\SystemLog;
+use plugin\sandworkflow\app\middleware\CheckAuth;
 
 return [
     '' => [

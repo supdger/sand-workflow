@@ -19,6 +19,8 @@ Route::group('/app/sandworkflow/admin', function () {
     Route::get('/definition/available', [DefinitionController::class, 'available']);
     Route::get('/definition/versions', [DefinitionController::class, 'versions']);
     Route::post('/definition/publish', [DefinitionController::class, 'publish']);
+    Route::post('/definition/saveDraft', [DefinitionController::class, 'saveDraft']);
+    Route::post('/definition/discardDraft', [DefinitionController::class, 'discardDraft']);
 
     fastRoute('instance', InstanceController::class);
     Route::get('/instance/pendingList', [InstanceController::class, 'pendingList']);

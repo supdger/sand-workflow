@@ -54,7 +54,7 @@ class InstanceController extends BaseController
         ), '发起成功');
     }
 
-    #[Permission('待办流程', 'sandworkflow:instance:pendingList')]
+    #[Permission('待办流程', 'sandworkflow:instance:pending-list')]
     public function pendingList(Request $request): Response
     {
         $query = $this->logic->pendingQuery();
@@ -66,19 +66,19 @@ class InstanceController extends BaseController
         return $this->success($this->logic->getList($query));
     }
 
-    #[Permission('我发起的流程', 'sandworkflow:instance:myList')]
+    #[Permission('我发起的流程', 'sandworkflow:instance:my-list')]
     public function myList(): Response
     {
         return $this->success($this->logic->getList($this->logic->myQuery()));
     }
 
-    #[Permission('我已处理的任务', 'sandworkflow:instance:processedList')]
+    #[Permission('我已处理的任务', 'sandworkflow:instance:processed-list')]
     public function processedList(): Response
     {
         return $this->success($this->logic->getList($this->logic->processedQuery()));
     }
 
-    #[Permission('流程实例详情', 'sandworkflow:instance:getDetail')]
+    #[Permission('流程实例详情', 'sandworkflow:instance:get-detail')]
     public function getDetail(Request $request): Response
     {
         return $this->success(
@@ -136,7 +136,7 @@ class InstanceController extends BaseController
         );
     }
 
-    #[Permission('流程加签', 'sandworkflow:instance:addSign')]
+    #[Permission('流程加签', 'sandworkflow:instance:add-sign')]
     public function addSign(Request $request): Response
     {
         return $this->success(
@@ -148,7 +148,7 @@ class InstanceController extends BaseController
         );
     }
 
-    #[Permission('流程减签', 'sandworkflow:instance:delSign')]
+    #[Permission('流程减签', 'sandworkflow:instance:del-sign')]
     public function delSign(Request $request): Response
     {
         return $this->success(
@@ -160,7 +160,7 @@ class InstanceController extends BaseController
         );
     }
 
-    #[Permission('可回退节点', 'sandworkflow:instance:backNodeList')]
+    #[Permission('可回退节点', 'sandworkflow:instance:back-node-list')]
     public function backNodeList(Request $request): Response
     {
         return $this->success(
@@ -187,7 +187,7 @@ class InstanceController extends BaseController
         );
     }
 
-    #[Permission('抄送给我的流程', 'sandworkflow:instance:copyList')]
+    #[Permission('抄送给我的流程', 'sandworkflow:instance:copy-list')]
     public function copyList(Request $request): Response
     {
         $query = (new WorkflowRuntimeService())->copyQuery(

@@ -13,7 +13,7 @@ DELETE FROM `sand_system_role_menu` WHERE `menu_id` IN (
     WHERE `slug` LIKE 'sandworkflow:%'
        OR `component` LIKE '/plugin/sandworkflow/%'
        OR `code` IN ('SandWorkflow','SandWorkflowCenter','SandWorkflowManage')
-       OR `name` LIKE 'sandworkflow/%'
+       OR `code` LIKE 'sandworkflow/%'
        OR `name` = 'SandWorkflow 工作流'
        OR `path` LIKE '/sandworkflow%'
   ) AS t
@@ -23,6 +23,6 @@ DELETE FROM `sand_system_menu`
 WHERE `slug` LIKE 'sandworkflow:%'
    OR `component` LIKE '/plugin/sandworkflow/%'
    OR `code` IN ('SandWorkflow','SandWorkflowCenter','SandWorkflowManage')
-   OR `name` LIKE 'sandworkflow/%'
+   OR `code` LIKE 'sandworkflow/%'
    OR `name` = 'SandWorkflow 工作流'
    OR `path` LIKE '/sandworkflow%';

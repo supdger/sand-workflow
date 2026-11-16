@@ -6,6 +6,11 @@ namespace plugin\sandworkflow\app\controller;
 use plugin\sandadmin\basic\BaseController;
 use plugin\sandadmin\service\Permission;
 use plugin\sandworkflow\app\logic\DefinitionLogic;
+use plugin\sandworkflow\app\model\FlowDefinition;
+use plugin\sandworkflow\app\service\DefinitionAdminPolicy;
+use plugin\sandworkflow\app\service\InitiatorScopePolicy;
+use plugin\sandworkflow\app\service\ViewerScopeFactory;
+use plugin\sandworkflow\app\service\SandAdminWorkflowContextFactory;
 use plugin\sandworkflow\app\validate\DefinitionValidate;
 use support\Request;
 use support\Response;
@@ -27,7 +32,9 @@ class DefinitionController extends BaseController
             ['group_id', ''],
             ['status', ''],
         ]);
-        return $this->success($this->logic->getList($this->logic->search($where)));
+        return $this->success(
+            $this->withManageFlags($this->logic->getList($this->logic->search($where)))
+        );
     }
 
     #[Permission('可发起流程列表', 'sandworkflow:definition:available')]
@@ -38,6 +45,8 @@ class DefinitionController extends BaseController
             ['group_id', ''],
         ]));
         $query->where('status', 1)->whereNotNull('publish_time');
+        $ids = $this->initiableDefinitionIds();
+        $query->whereIn('id', $ids === [] ? [-1] : $ids);
         return $this->success($this->logic->getList($query));
     }
 
@@ -50,7 +59,9 @@ class DefinitionController extends BaseController
     #[Permission('流程定义读取', 'sandworkflow:definition:read')]
     public function read(Request $request): Response
     {
-        return $this->success($this->logic->read($request->input('id', 0))->toArray());
+        $row = $this->logic->read($request->input('id', 0))->toArray();
+        $row['can_manage'] = $this->canManageRow($row, $this->viewerScope());
+        return $this->success($row);
     }
 
     #[Permission('流程定义保存', 'sandworkflow:definition:save')]
@@ -83,5 +94,62 @@ class DefinitionController extends BaseController
     {
         $this->logic->destroy($request->post('ids', ''));
         return $this->success('删除成功');
+    }
+
+    private function viewerScope(): array
+    {
+        return ViewerScopeFactory::build(SandAdminWorkflowContextFactory::actor());
+    }
+
+    /**
+     * 发起范围是定义 JSON 内的私有键，无法在 SQL 侧过滤；
+     * 定义量级小，先在 PHP 侧算出发起范围命中的 id 再回灌查询，保证分页正确。
+     * @return list<int>
+     */
+    private function initiableDefinitionIds(): array
+    {
+        $viewer = $this->viewerScope();
+        $ids = [];
+        $definitions = FlowDefinition::where('status', 1)
+            ->whereNotNull('publish_time')
+            ->field('id,definition_json')
+            ->select();
+        foreach ($definitions as $definition) {
+            $json = $definition->getAttr('definition_json');
+            if (InitiatorScopePolicy::canInitiate(is_array($json) ? $json : [], $viewer)) {
+                $ids[] = (int) $definition->getAttr('id');
+            }
+        }
+        return $ids;
+    }
+
+    private function withManageFlags(mixed $result): mixed
+    {
+        if (!is_array($result)) {
+            return $result;
+        }
+        $viewer = $this->viewerScope();
+        if (isset($result['data']) && is_array($result['data'])) {
+            foreach ($result['data'] as $index => $row) {
+                if (is_array($row)) {
+                    $result['data'][$index]['can_manage'] = $this->canManageRow($row, $viewer);
+                }
+            }
+            return $result;
+        }
+        if (array_is_list($result)) {
+            foreach ($result as $index => $row) {
+                if (is_array($row)) {
+                    $result[$index]['can_manage'] = $this->canManageRow($row, $viewer);
+                }
+            }
+        }
+        return $result;
+    }
+
+    private function canManageRow(array $row, array $viewer): bool
+    {
+        $json = $row['definition_json'] ?? null;
+        return DefinitionAdminPolicy::canManage(is_array($json) ? $json : [], $viewer);
     }
 }

@@ -1,5 +1,6 @@
 -- SandWorkflow PostgreSQL upgrade script (idempotent).
 ALTER TABLE "sand_workflow_log" ADD COLUMN IF NOT EXISTS "form_change_snapshot" jsonb NULL;
+ALTER TABLE "sand_workflow_instance" ADD COLUMN IF NOT EXISTS "is_cancelable" smallint NULL;
 
 -- 宿主更名后把存量账号空间 saiadmin 改写为 sandadmin，避免升级后待办消失。
 UPDATE "sand_workflow_instance"

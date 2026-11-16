@@ -78,6 +78,7 @@ CREATE TABLE "sand_workflow_instance" (
   "act_node_id" varchar(80) DEFAULT NULL,
   "ended_time" timestamp(0) without time zone DEFAULT NULL,
   "flow_status" smallint DEFAULT 0,
+  "is_cancelable" smallint DEFAULT NULL, -- 发起时冻结的允许撤销开关；NULL 表示升级前的存量实例
   "status" smallint DEFAULT 1,
   "created_by" int DEFAULT NULL,
   "updated_by" int DEFAULT NULL,

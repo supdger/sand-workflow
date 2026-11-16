@@ -16,7 +16,10 @@ use plugin\sandworkflow\app\model\FlowTaskAssignee;
 use plugin\sandworkflow\app\contract\ActorRef;
 use plugin\sandworkflow\app\contract\WorkflowStartContext;
 use plugin\sandworkflow\app\service\FormValueWriteGuard;
+use plugin\sandworkflow\app\service\InitiatorScopePolicy;
+use plugin\sandworkflow\app\service\InstanceSnapshotPolicy;
 use plugin\sandworkflow\app\service\OrganizationParticipantMaterializer;
+use plugin\sandworkflow\app\service\ViewerScopeFactory;
 use plugin\sandworkflow\common\FlowConstant;
 use support\think\Db;
 
@@ -66,9 +69,13 @@ class InstanceLogic extends BaseLogic
         if (empty($definition->getAttr('publish_time'))) {
             throw new ApiException('流程定义尚未发布');
         }
+        $definitionJson = $definition->getAttr('definition_json');
+        $definitionJson = is_array($definitionJson) ? $definitionJson : [];
+        if (!InitiatorScopePolicy::canInitiate($definitionJson, $this->viewerScope($actor))) {
+            throw new ApiException('当前用户不在该流程的发起范围内');
+        }
 
-        return Db::transaction(function () use ($data, $definition, $definitionId, $requestId, $actor) {
-            $definitionJson = $definition->getAttr('definition_json') ?: [];
+        return Db::transaction(function () use ($data, $definition, $definitionId, $definitionJson, $requestId, $actor) {
             $version = FlowDefinitionVersion::where('definition_id', $definitionId)
                 ->where('version_no', (int) $definition->getAttr('current_version'))
                 ->findOrEmpty();
@@ -110,6 +117,7 @@ class InstanceLogic extends BaseLogic
                 'form_value' => $formValue,
                 'act_node_id' => $firstNode ? $this->nodeIdentity($firstNode) : 'end',
                 'flow_status' => FlowConstant::STATUS['UNDERWAY'],
+                'is_cancelable' => (int) ($definition->getAttr('is_cancelable') ?? 1),
             ]);
 
             FlowLog::create([
@@ -1027,8 +1035,14 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('当前流程不能撤销');
             }
 
-            $definition = FlowDefinition::findOrEmpty((int) $instance->getAttr('definition_id'));
-            if ($definition->isEmpty() || (int) $definition->getAttr('is_cancelable') !== 1) {
+            // is_cancelable 列是发起时冻结的值；NULL 的存量实例回落到活定义（升级前行为）。
+            $cancelable = $instance->getAttr('is_cancelable');
+            $liveCancelable = null;
+            if ($cancelable === null) {
+                $definition = FlowDefinition::findOrEmpty((int) $instance->getAttr('definition_id'));
+                $liveCancelable = $definition->isEmpty() ? 0 : $definition->getAttr('is_cancelable');
+            }
+            if (!InstanceSnapshotPolicy::cancelable($cancelable, $liveCancelable)) {
                 throw new ApiException('该流程不允许撤销');
             }
 
@@ -1320,15 +1334,20 @@ class InstanceLogic extends BaseLogic
         if ($instance->isEmpty()) {
             throw new ApiException('流程实例不存在');
         }
-        $definitionJson = $instance->getAttr('definition_snapshot') ?: [];
-        if ($definitionJson === []) {
+        $snapshot = $instance->getAttr('definition_snapshot');
+        $live = null;
+        if (!is_array($snapshot) || $snapshot === []) {
             $definition = FlowDefinition::findOrEmpty((int) $task->getAttr('definition_id'));
             if ($definition->isEmpty()) {
                 throw new ApiException('流程定义不存在');
             }
             $this->assertScope($instance);
-            $definitionJson = $definition->getAttr('definition_json') ?: [];
+            $live = $definition->getAttr('definition_json');
         }
+        $definitionJson = InstanceSnapshotPolicy::definitionJson(
+            is_array($snapshot) ? $snapshot : null,
+            is_array($live) ? $live : null
+        );
         $nodeConfig = $definitionJson['nodeConfig'] ?? null;
         if (!is_array($nodeConfig)) {
             return ['task' => null, 'copies' => []];
@@ -1839,6 +1858,24 @@ class InstanceLogic extends BaseLogic
             throw new ApiException('请先登录后再操作流程');
         }
         return new ActorRef('sandadmin', $accountId);
+    }
+
+    /**
+     * 发起范围判定视图：sandadmin 账户查宿主部门/角色；其他账户域没有组织数据源，
+     * 只能命中 user 类型条目。
+     * @return array{account_id:string,dept_ids:list<int>,role_ids:list<int>,is_super:bool}
+     */
+    private function viewerScope(ActorRef $actor): array
+    {
+        if ($actor->accountSpace === 'sandadmin') {
+            return ViewerScopeFactory::build($actor);
+        }
+        return [
+            'account_id' => $actor->accountId,
+            'dept_ids' => [],
+            'role_ids' => [],
+            'is_super' => false,
+        ];
     }
 
     private function withContext(ActorRef $actor, array $scope, array $participants, callable $callback): mixed

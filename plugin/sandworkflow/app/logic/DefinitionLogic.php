@@ -7,9 +7,13 @@ use plugin\sandadmin\basic\think\BaseLogic;
 use plugin\sandadmin\exception\ApiException;
 use plugin\sandworkflow\app\model\FlowDefinition;
 use plugin\sandworkflow\app\model\FlowDefinitionVersion;
+use plugin\sandworkflow\app\contract\ActorRef;
 use plugin\sandworkflow\app\contract\OrganizationResolutionRequest;
+use plugin\sandworkflow\app\service\DefinitionAdminPolicy;
+use plugin\sandworkflow\app\service\InitiatorScopePolicy;
 use plugin\sandworkflow\app\service\OrganizationParticipantMaterializer;
 use plugin\sandworkflow\app\service\OrganizationParticipantRegistry;
+use plugin\sandworkflow\app\service\ViewerScopeFactory;
 use plugin\sandworkflow\common\FlowConstant;
 use support\think\Db;
 
@@ -24,6 +28,10 @@ class DefinitionLogic extends BaseLogic
 
     public function publish(array $data): mixed
     {
+        $definitionId = (int) ($data['id'] ?? 0);
+        if ($definitionId > 0) {
+            $this->assertManageable($definitionId);
+        }
         $definition = $data['definition_json'] ?? [];
         if (is_string($definition)) {
             $decoded = json_decode($definition, true);
@@ -37,14 +45,17 @@ class DefinitionLogic extends BaseLogic
             'icon' => $data['icon'] ?? '',
             'description' => $data['description'] ?? '',
             'definition_json' => $definition,
-            'permission_type' => $data['permission_type'] ?? 1,
+            // permission_type 列以 JSON 内的 flowPermission.type 为准回写
+            'permission_type' => InitiatorScopePolicy::permissionType(
+                $definition,
+                (int) ($data['permission_type'] ?? 1)
+            ),
             'is_cancelable' => $data['is_cancelable'] ?? 1,
             'publish_time' => date('Y-m-d H:i:s'),
             'status' => $data['status'] ?? 1,
         ];
 
-        return Db::transaction(function () use ($data, $definition, $row) {
-            $definitionId = (int) ($data['id'] ?? 0);
+        return Db::transaction(function () use ($data, $definition, $row, $definitionId) {
             if ($definitionId > 0) {
                 $current = FlowDefinition::where('id', $definitionId)->lock(true)->findOrEmpty();
                 if ($current->isEmpty()) {
@@ -69,6 +80,65 @@ class DefinitionLogic extends BaseLogic
 
             return $definitionId;
         });
+    }
+
+    public function edit($id, array $data): mixed
+    {
+        $this->assertManageable((int) $id);
+        return parent::edit($id, $data);
+    }
+
+    public function destroy($ids): bool
+    {
+        foreach ($this->targetIds($ids) as $definitionId) {
+            $this->assertManageable($definitionId);
+        }
+        return parent::destroy($ids);
+    }
+
+    public function assertManageable(int $definitionId): void
+    {
+        $definition = FlowDefinition::findOrEmpty($definitionId);
+        if ($definition->isEmpty()) {
+            throw new ApiException('流程定义不存在');
+        }
+        $definitionJson = $definition->getAttr('definition_json');
+        if (!DefinitionAdminPolicy::canManage(
+            is_array($definitionJson) ? $definitionJson : [],
+            $this->viewerScope()
+        )) {
+            throw new ApiException('当前用户不是该流程的管理员');
+        }
+    }
+
+    private function viewerScope(): array
+    {
+        $info = function_exists('getCurrentInfo') ? getCurrentInfo() : null;
+        $accountId = (string) ($info['id'] ?? '');
+        if ($accountId === '') {
+            throw new ApiException('请先登录后再操作流程');
+        }
+        return ViewerScopeFactory::build(new ActorRef('sandadmin', $accountId));
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function targetIds(mixed $ids): array
+    {
+        if (is_string($ids)) {
+            $ids = $ids === '' ? [] : explode(',', $ids);
+        }
+        if (!is_array($ids)) {
+            return [];
+        }
+        $result = [];
+        foreach ($ids as $id) {
+            if (is_numeric($id) && (int) $id > 0) {
+                $result[(int) $id] = true;
+            }
+        }
+        return array_keys($result);
     }
 
     protected function prepareDefinition(array $definition): array

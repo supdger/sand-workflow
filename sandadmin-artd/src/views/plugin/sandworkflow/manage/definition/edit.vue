@@ -1,3 +1,4 @@
+<!-- 本文件为 SandWorkflow 自写代码，引用了派生代码，分发时按 AGPL-3.0 对待，见 sandadmin-artd/src/views/plugin/sandworkflow/LICENSE 与仓库根 NOTICE -->
 <template>
   <section v-loading="publishing" class="art-full-height flow-edit-page">
     <header class="fd-nav">

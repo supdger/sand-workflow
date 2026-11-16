@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use plugin\sandworkflow\app\service\InitiatorScopePolicy;
-use plugin\sandworkflow\app\service\ViewerScopeFactory;
+use plugin\sandworkflow\app\support\HostOrg;
 
 final class InitiatorScopePolicyTest
 {
@@ -126,9 +126,20 @@ final class InitiatorScopePolicyTest
 
     public function testDeptIdsExpansion(TestContext $t): void
     {
-        $t->check(ViewerScopeFactory::deptIds(5, '1,3,5') === [5, 1, 3], 'level 展开祖先链');
-        $t->check(ViewerScopeFactory::deptIds(0, '1,3') === [], '无部门返回空');
-        $t->check(ViewerScopeFactory::deptIds(5, '5') === [5], '重复去重');
-        $t->check(ViewerScopeFactory::deptIds(5, '') === [5], 'level 缺失保留主部门');
+        $depts = [
+            ['id' => 1, 'parent_id' => null, 'status' => 1],
+            ['id' => 3, 'parent_id' => 1, 'status' => 1],
+            ['id' => 5, 'parent_id' => 3, 'status' => 1],
+            ['id' => 8, 'parent_id' => 5, 'status' => 2],
+        ];
+        $t->check(HostOrg::deptAncestorsInRows(5, $depts) === [5, 3, 1], 'parent_id 上溯祖先链');
+        $t->check(HostOrg::deptAncestorsInRows(0, $depts) === [], '无部门返回空');
+        $t->check(HostOrg::deptAncestorsInRows(8, $depts) === [8], '叶部门停用只回自身');
+        $t->check(HostOrg::deptAncestorsInRows(9, $depts) === [9], '部门缺失只回自身');
+        $cycle = [
+            ['id' => 1, 'parent_id' => 2, 'status' => 1],
+            ['id' => 2, 'parent_id' => 1, 'status' => 1],
+        ];
+        $t->check(HostOrg::deptAncestorsInRows(1, $cycle) === [1, 2], '成环截断不死循环');
     }
 }

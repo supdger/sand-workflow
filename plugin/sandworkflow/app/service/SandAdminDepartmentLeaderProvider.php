@@ -4,9 +4,8 @@ declare(strict_types=1);
 namespace plugin\sandworkflow\app\service;
 
 use DomainException;
-use plugin\sandadmin\app\model\system\SystemDept;
-use plugin\sandadmin\app\model\system\SystemUser;
 use plugin\sandworkflow\app\contract\ActorRef;
+use plugin\sandworkflow\app\support\HostOrg;
 use plugin\sandworkflow\app\contract\OrganizationParticipantProvider;
 use plugin\sandworkflow\app\contract\OrganizationResolutionRequest;
 use plugin\sandworkflow\common\FlowConstant;
@@ -97,10 +96,7 @@ class SandAdminDepartmentLeaderProvider implements OrganizationParticipantProvid
             throw new DomainException('部门负责人不存在或已停用：' . $departmentName);
         }
         return new ActorRef('sandadmin', (string) $leaderId, [
-            'name' => (string) (
-                ($leader['realname'] ?? '')
-                ?: ($leader['username'] ?? $leaderId)
-            ),
+            'name' => HostOrg::displayName($leader, $leaderId),
             'department_id' => (string) ($department['id'] ?? ''),
             'department_name' => $departmentName,
         ]);
@@ -108,13 +104,11 @@ class SandAdminDepartmentLeaderProvider implements OrganizationParticipantProvid
 
     protected function findUser(int $userId): ?array
     {
-        $user = SystemUser::findOrEmpty($userId);
-        return $user->isEmpty() ? null : $user->toArray();
+        return HostOrg::findUser($userId);
     }
 
     protected function findDepartment(int $deptId): ?array
     {
-        $department = SystemDept::findOrEmpty($deptId);
-        return $department->isEmpty() ? null : $department->toArray();
+        return HostOrg::findDept($deptId);
     }
 }

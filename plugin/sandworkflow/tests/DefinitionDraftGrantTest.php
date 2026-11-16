@@ -6,7 +6,7 @@ declare(strict_types=1);
 // 连不上 PG 时走环境变量 WF_DRAFT_TEST_PG 指定的 conninfo，仍不通则显式 SKIP。
 final class DefinitionDraftGrantTest
 {
-    private const DRAFT_SLUGS = "'sandworkflow:definition:saveDraft','sandworkflow:definition:discardDraft'";
+    private const DRAFT_SLUGS = "'sandworkflow:definition:save-draft','sandworkflow:definition:discard-draft'";
 
     public function testGrantSectionGrantsEditorsOnly(TestContext $t): void
     {
@@ -54,7 +54,7 @@ final class DefinitionDraftGrantTest
                 . ' WHERE m.slug IN (' . self::DRAFT_SLUGS . ') ORDER BY 1');
             $grantedFirst = array_values(array_filter(explode("\n", $grantsFirst)));
             $t->check(
-                $grantedFirst === ['2:sandworkflow:definition:discardDraft', '2:sandworkflow:definition:saveDraft'],
+                $grantedFirst === ['2:sandworkflow:definition:discard-draft', '2:sandworkflow:definition:save-draft'],
                 '只有持 save+update 的角色 2 拿到两个草稿码，实际: ' . ($grantsFirst === '' ? '（空）' : $grantsFirst)
             );
 
@@ -69,10 +69,10 @@ final class DefinitionDraftGrantTest
                 . ' WHERE m.slug IN (' . self::DRAFT_SLUGS . ') ORDER BY 1');
             $grantedRerun = array_values(array_filter(explode("\n", $grantsRerun)));
             $t->check($grantedRerun === [
-                '2:sandworkflow:definition:discardDraft',
-                '2:sandworkflow:definition:saveDraft',
-                '5:sandworkflow:definition:discardDraft',
-                '5:sandworkflow:definition:saveDraft',
+                '2:sandworkflow:definition:discard-draft',
+                '2:sandworkflow:definition:save-draft',
+                '5:sandworkflow:definition:discard-draft',
+                '5:sandworkflow:definition:save-draft',
             ], '复跑后只补只持 save 的角色 5，角色 2 不重复绑，实际: ' . $grantsRerun);
         } finally {
             self::psql($adminDsn, 'DROP DATABASE IF EXISTS wf_draft2_grant_test');
@@ -108,7 +108,7 @@ final class DefinitionDraftGrantTest
         $install = (string) file_get_contents($repoRoot . '/install.sql');
         $broad = substr($install, (int) strpos($install, '绑定到非超管角色'));
         $t->check(
-            str_contains($broad, "m.slug NOT IN ('sandworkflow:definition:saveDraft', 'sandworkflow:definition:discardDraft')"),
+            str_contains($broad, "m.slug NOT IN ('sandworkflow:definition:save-draft', 'sandworkflow:definition:discard-draft')"),
             'PG install 广绑排除了两个草稿码'
         );
         $t->check(
@@ -120,7 +120,7 @@ final class DefinitionDraftGrantTest
         $installMysql = (string) file_get_contents($repoRoot . '/install-mysql.sql');
         $broadMysql = substr($installMysql, (int) strpos($installMysql, '绑定到非超管角色'));
         $t->check(
-            str_contains($broadMysql, "m.slug NOT IN ('sandworkflow:definition:saveDraft', 'sandworkflow:definition:discardDraft')"),
+            str_contains($broadMysql, "m.slug NOT IN ('sandworkflow:definition:save-draft', 'sandworkflow:definition:discard-draft')"),
             'MySQL install 广绑排除了两个草稿码'
         );
         $t->check(

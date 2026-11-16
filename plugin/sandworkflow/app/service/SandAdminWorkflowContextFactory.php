@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace plugin\sandworkflow\app\service;
 
-use plugin\sandadmin\app\model\system\SystemUser;
 use plugin\sandworkflow\app\contract\ActorRef;
+use plugin\sandworkflow\app\support\HostOrg;
 use plugin\sandworkflow\app\contract\WorkflowStartContext;
 use plugin\sandadmin\exception\ApiException;
 
@@ -87,13 +87,12 @@ final class SandAdminWorkflowContextFactory
             if ($userIds === [] || count($userIds) > 25) {
                 throw new ApiException('发起人自选处理人数量必须为1至25人');
             }
-            $users = SystemUser::whereIn('id', $userIds)
-                ->where('status', 1)
-                ->select()
-                ->toArray();
             $userMap = [];
-            foreach ($users as $user) {
-                $userMap[(int) $user['id']] = $user;
+            foreach ($userIds as $candidateId) {
+                $user = HostOrg::findUser($candidateId);
+                if ($user !== null && (int) ($user['status'] ?? 0) === 1) {
+                    $userMap[$candidateId] = $user;
+                }
             }
             if (count($userMap) !== count($userIds)) {
                 throw new ApiException('发起人自选处理人不存在或已停用');
@@ -102,7 +101,7 @@ final class SandAdminWorkflowContextFactory
                 static function (int $userId) use ($userMap): array {
                     $user = $userMap[$userId];
                     return (new ActorRef('sandadmin', (string) $userId, [
-                        'name' => (string) (($user['realname'] ?? '') ?: ($user['username'] ?? $userId)),
+                        'name' => HostOrg::displayName($user, $userId),
                     ]))->toArray();
                 },
                 $userIds

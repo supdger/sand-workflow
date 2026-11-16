@@ -91,7 +91,7 @@ class DefinitionController extends BaseController
         return $this->success(['id' => $this->logic->publish($data)], '发布成功');
     }
 
-    #[Permission('保存草稿', 'sandworkflow:definition:saveDraft')]
+    #[Permission('保存草稿', 'sandworkflow:definition:save-draft')]
     public function saveDraft(Request $request): Response
     {
         $data = $request->post();
@@ -99,7 +99,7 @@ class DefinitionController extends BaseController
         return $this->success(['id' => $this->logic->saveDraft($data)], '保存成功');
     }
 
-    #[Permission('放弃草稿', 'sandworkflow:definition:discardDraft')]
+    #[Permission('放弃草稿', 'sandworkflow:definition:discard-draft')]
     public function discardDraft(Request $request): Response
     {
         $this->logic->discardDraft((int) $request->post('id', 0));

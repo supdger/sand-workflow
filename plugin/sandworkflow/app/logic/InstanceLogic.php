@@ -4,9 +4,8 @@ declare(strict_types=1);
 namespace plugin\sandworkflow\app\logic;
 
 use plugin\sandadmin\basic\think\BaseLogic;
-use plugin\sandadmin\app\model\system\SystemUser;
-use plugin\sandadmin\app\model\system\SystemUserRole;
 use plugin\sandadmin\exception\ApiException;
+use plugin\sandworkflow\app\support\HostOrg;
 use plugin\sandworkflow\app\model\FlowDefinition;
 use plugin\sandworkflow\app\model\FlowDefinitionVersion;
 use plugin\sandworkflow\app\model\FlowInstance;
@@ -534,10 +533,8 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('当前用户不是该任务的待办处理人');
             }
 
-            $targetUser = SystemUser::where('id', (int) $targetAccountId)
-                ->where('status', 1)
-                ->findOrEmpty();
-            if ($targetUser->isEmpty()) {
+            $targetUser = HostOrg::findUser((int) $targetAccountId);
+            if ($targetUser === null || (int) ($targetUser['status'] ?? 0) !== 1) {
                 throw new ApiException('目标处理人不存在或已停用');
             }
             $duplicatedTarget = FlowTaskAssignee::where('task_id', $taskId)
@@ -548,14 +545,14 @@ class InstanceLogic extends BaseLogic
                 throw new ApiException('目标处理人已在当前任务中');
             }
 
-            $sourceUser = SystemUser::where('id', (int) $actor->accountId)->findOrEmpty();
+            $sourceUser = HostOrg::findUser((int) $actor->accountId);
             $sourceRef = new ActorRef('sandadmin', $actor->accountId, [
-                'name' => $sourceUser->isEmpty()
+                'name' => $sourceUser === null
                     ? $actor->accountId
-                    : (string) ($sourceUser->getAttr('realname') ?: $sourceUser->getAttr('username')),
+                    : HostOrg::displayName($sourceUser, $actor->accountId),
             ]);
             $targetRef = new ActorRef('sandadmin', $targetAccountId, [
-                'name' => (string) ($targetUser->getAttr('realname') ?: $targetUser->getAttr('username')),
+                'name' => HostOrg::displayName($targetUser, $targetAccountId),
             ]);
             $now = date('Y-m-d H:i:s');
 
@@ -694,20 +691,18 @@ class InstanceLogic extends BaseLogic
             $this->assertTaskAssignee($task);
             $this->assertTaskSignable($task, $instance);
 
-            $targetUser = SystemUser::where('id', (int) $targetAccountId)
-                ->where('status', 1)
-                ->findOrEmpty();
-            if ($targetUser->isEmpty()) {
+            $targetUser = HostOrg::findUser((int) $targetAccountId);
+            if ($targetUser === null || (int) ($targetUser['status'] ?? 0) !== 1) {
                 throw new ApiException('目标处理人不存在或已停用');
             }
             $targetRef = new ActorRef('sandadmin', $targetAccountId, [
-                'name' => (string) ($targetUser->getAttr('realname') ?: $targetUser->getAttr('username')),
+                'name' => HostOrg::displayName($targetUser, $targetAccountId),
             ]);
-            $operatorUser = SystemUser::where('id', (int) $actor->accountId)->findOrEmpty();
+            $operatorUser = HostOrg::findUser((int) $actor->accountId);
             $operatorRef = new ActorRef('sandadmin', $actor->accountId, [
-                'name' => $operatorUser->isEmpty()
+                'name' => $operatorUser === null
                     ? $actor->accountId
-                    : (string) ($operatorUser->getAttr('realname') ?: $operatorUser->getAttr('username')),
+                    : HostOrg::displayName($operatorUser, $actor->accountId),
             ]);
             $now = date('Y-m-d H:i:s');
 
@@ -1521,7 +1516,7 @@ class InstanceLogic extends BaseLogic
             } elseif ($type === FlowConstant::ASSIGNEE['ROLE']) {
                 $roleIds = array_values(array_filter(array_map('intval', (array) ($item['roles'] ?? []))));
                 if ($roleIds !== []) {
-                    foreach (SystemUserRole::whereIn('role_id', $roleIds)->column('user_id') as $userId) {
+                    foreach (HostOrg::roleUserIds($roleIds) as $userId) {
                         $refs[] = (new ActorRef('sandadmin', (string) $userId))->toArray();
                     }
                 }
@@ -1599,10 +1594,7 @@ class InstanceLogic extends BaseLogic
             } elseif ($type === FlowConstant::ASSIGNEE['ROLE']) {
                 $roleIds = array_values(array_filter(array_map('intval', (array) ($rule['roles'] ?? []))));
                 if ($roleIds !== []) {
-                    $userIds = array_merge(
-                        $userIds,
-                        array_map('intval', SystemUserRole::whereIn('role_id', $roleIds)->column('user_id'))
-                    );
+                    $userIds = array_merge($userIds, HostOrg::roleUserIds($roleIds));
                 }
             } elseif ($type === FlowConstant::ASSIGNEE['ASSIGNEE']) {
                 foreach ((array) ($rule['assignees'] ?? []) as $assignee) {
@@ -1616,13 +1608,12 @@ class InstanceLogic extends BaseLogic
         if ($userIds === []) {
             throw new ApiException('抄送节点未解析到有效接收人');
         }
-        $users = SystemUser::whereIn('id', $userIds)
-            ->where('status', 1)
-            ->select()
-            ->toArray();
         $userMap = [];
-        foreach ($users as $user) {
-            $userMap[(int) $user['id']] = $user;
+        foreach ($userIds as $candidateId) {
+            $user = HostOrg::findUser($candidateId);
+            if ($user !== null && (int) ($user['status'] ?? 0) === 1) {
+                $userMap[$candidateId] = $user;
+            }
         }
         $refs = [];
         foreach ($userIds as $userId) {
@@ -1631,7 +1622,7 @@ class InstanceLogic extends BaseLogic
                 continue;
             }
             $refs[] = (new ActorRef('sandadmin', (string) $userId, [
-                'name' => (string) (($user['realname'] ?? '') ?: ($user['username'] ?? $userId)),
+                'name' => HostOrg::displayName($user, $userId),
             ]))->toArray();
         }
         if ($refs === []) {

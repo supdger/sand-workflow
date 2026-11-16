@@ -10,7 +10,7 @@ use support\Response;
 
 class TaskController extends BaseController
 {
-    #[Permission('待办任务列表', 'sandworkflow:task:pendingList')]
+    #[Permission('待办任务列表', 'sandworkflow:task:pending-list')]
     public function pendingList(): Response
     {
         $logic = new InstanceLogic();

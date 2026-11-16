@@ -104,8 +104,8 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const queryClient = useQueryClient();
 
   const canManage = definition === null || definition.can_manage !== false;
-  const canSaveRow = useCan('sandworkflow:definition:saveDraft');
-  const canDiscard = useCan('sandworkflow:definition:discardDraft');
+  const canSaveRow = useCan('sandworkflow:definition:save-draft');
+  const canDiscard = useCan('sandworkflow:definition:discard-draft');
   const canPublish = useCan('sandworkflow:definition:publish');
 
   const hasDraft = definition?.has_draft === true;

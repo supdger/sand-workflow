@@ -317,7 +317,7 @@ INSERT INTO `sand_system_menu` (`parent_id`,`name`,`code`,`slug`,`type`,`path`,`
 ((SELECT `id` FROM (SELECT `id` FROM `sand_system_menu` WHERE `code` = 'sandworkflow/org') AS p),'角色列表','','sandworkflow:index:listRoles',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
 ((SELECT `id` FROM (SELECT `id` FROM `sand_system_menu` WHERE `code` = 'sandworkflow/org') AS p),'部门列表','','sandworkflow:index:listDepts',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
--- 绑定到非超管角色（超管 id=1 默认全权限）
+-- 绑定到非超管角色（超管 id=1 默认全权限）；「保存草稿 / 放弃草稿」不在此广绑，见下段。
 INSERT INTO `sand_system_role_menu` (`role_id`, `menu_id`)
 SELECT r.id, m.id
 FROM `sand_system_role` r
@@ -329,4 +329,23 @@ JOIN `sand_system_menu` m
     OR m.name LIKE 'sandworkflow/%'
     OR m.name = 'SandWorkflow 工作流'
   )
+  AND m.slug NOT IN ('sandworkflow:definition:saveDraft', 'sandworkflow:definition:discardDraft')
 WHERE r.id <> 1;
+
+-- 「保存草稿 / 放弃草稿」跟着原有编辑权限走：已持 save 或 update 的角色才授，只读角色不授。
+INSERT INTO `sand_system_role_menu` (`role_id`, `menu_id`)
+SELECT r.id, m.id
+FROM `sand_system_role` r
+JOIN `sand_system_menu` m
+  ON m.slug IN ('sandworkflow:definition:saveDraft', 'sandworkflow:definition:discardDraft')
+WHERE EXISTS (
+    SELECT 1
+    FROM `sand_system_role_menu` rm_edit
+    JOIN `sand_system_menu` e ON e.id = rm_edit.menu_id
+    WHERE rm_edit.role_id = r.id
+      AND e.slug IN ('sandworkflow:definition:save', 'sandworkflow:definition:update')
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM `sand_system_role_menu` rm
+    WHERE rm.role_id = r.id AND rm.menu_id = m.id
+  );

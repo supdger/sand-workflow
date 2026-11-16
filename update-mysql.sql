@@ -75,13 +75,19 @@ FROM (
 JOIN `sand_system_menu` p ON p.`code` = 'sandworkflow/manage/definition'
 WHERE NOT EXISTS (SELECT 1 FROM `sand_system_menu` m WHERE m.`slug` = v.`slug`);
 
--- 新权限码补绑非超管角色，与 install-mysql.sql 尾部「绑定到非超管角色」口径一致。
+-- 新权限码跟着原有编辑权限走：已持 save 或 update 的角色才补绑，只读角色不授。
 INSERT INTO `sand_system_role_menu` (`role_id`, `menu_id`)
 SELECT r.`id`, m.`id`
 FROM `sand_system_role` r
 JOIN `sand_system_menu` m
   ON m.`slug` IN ('sandworkflow:definition:saveDraft', 'sandworkflow:definition:discardDraft')
-WHERE r.`id` <> 1
+WHERE EXISTS (
+    SELECT 1
+    FROM `sand_system_role_menu` rm_edit
+    JOIN `sand_system_menu` e ON e.`id` = rm_edit.`menu_id`
+    WHERE rm_edit.`role_id` = r.`id`
+      AND e.`slug` IN ('sandworkflow:definition:save', 'sandworkflow:definition:update')
+  )
   AND NOT EXISTS (
     SELECT 1 FROM `sand_system_role_menu` rm
     WHERE rm.`role_id` = r.`id` AND rm.`menu_id` = m.`id`

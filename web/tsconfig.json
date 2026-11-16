@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    // 编译选项与宿主 host/web/tsconfig.json 保持一致，保证插件代码在同一条基线下检查。
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["vite/client", "node"],
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      // 插件源码里 `@/…` 引的是宿主前端模块，与 vitest.config.ts 的别名一致，
+      // 默认指向本机集成目录 ../../host/web/src；换宿主副本时需同步改这里。
+      "@/*": ["../../host/web/src/*"]
+    }
+  },
+  // 宿主 test/setup.ts 负责 jest-dom 匹配器的类型增强（toBeInTheDocument 等），
+  // 与 vitest setupFiles 对应，必须一起进编译，否则测试文件里的断言会报类型错。
+  "include": [
+    "plugin-web/sandworkflow",
+    "vitest.config.ts",
+    "../../host/web/src/test/setup.ts"
+  ]
+}

@@ -166,6 +166,9 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const canWrite = canManage && trimmedName !== '' && trimmedName.length <= NAME_MAX;
 
   const saveMutation = useMutation({
+    // 默认 networkMode:'online' 会在断网时把 mutation 静默挂起（按钮转圈、联网后补发），
+    // 'always' 让断网时 fetch 直接失败走 onError 提示。
+    networkMode: 'always',
     mutationFn: (input: SaveInput) =>
       saveDraftDefinition({
         id: definition?.id,

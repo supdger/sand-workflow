@@ -195,6 +195,9 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   });
 
   const discardMutation = useMutation({
+    // 默认 networkMode:'online' 会在断网时把 mutation 静默挂起（按钮转圈、联网后补发），
+    // 'always' 让断网时 fetch 直接失败走 onError 提示。
+    networkMode: 'always',
     mutationFn: (definitionId: number) => discardDraftDefinition(definitionId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['sandworkflow'] });
@@ -206,6 +209,9 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   });
 
   const publishMutation = useMutation({
+    // 默认 networkMode:'online' 会在断网时把 mutation 静默挂起（按钮转圈、联网后补发），
+    // 'always' 让断网时 fetch 直接失败走 onError 提示。
+    networkMode: 'always',
     mutationFn: (input: SaveInput) =>
       publishDefinition({
         id: definition?.id,

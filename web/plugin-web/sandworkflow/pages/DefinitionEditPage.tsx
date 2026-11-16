@@ -14,7 +14,7 @@ import {
 import { IconArrowLeft } from '@douyinfe/semi-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
+import { useBlocker, useNavigate, useParams } from 'react-router';
 
 import { ErrorState } from '@/components/ErrorState';
 import { Loading } from '@/components/Loading';
@@ -22,10 +22,10 @@ import { useCan } from '@/hooks/useCan';
 import { confirmAction } from '@/lib/confirmAction';
 
 import {
-  createDefinition,
+  discardDraftDefinition,
   getDefinition,
   publishDefinition,
-  updateDefinition,
+  saveDraftDefinition,
 } from '../api/definitions';
 import { pluginErrorMessage } from '../api/pluginClient';
 import type { Definition } from '../api/types';
@@ -34,7 +34,9 @@ import { FlowSettingsPanel } from '../components/designer/FlowSettingsPanel';
 import { SettingsPanel } from '../components/designer/SettingsPanel';
 import { FormDesigner } from '../components/form/FormDesigner';
 import { useDefinitionDraft } from '../hooks/useDefinitionDraft';
-import { createDraft, loadDefinition, serializeDraft } from '../model/definitionCodec';
+import type { DefinitionDraft } from '../model/definitionCodec';
+import { serializeDraft } from '../model/definitionCodec';
+import { draftSourceOf, type DraftMetaState } from '../model/draftEnvelope';
 import { checkDraft, collectConditionVars, type DraftIssue } from '../model/draftCheck';
 import { findNode } from '../model/nodeTree';
 import { createBranch, createNode, nodeKeyOf } from '../model/nodeTypes';
@@ -44,7 +46,7 @@ const NAME_MAX = 120;
 
 /**
  * 流程编辑页壳：顶部基础信息与操作按钮，左侧画布、右侧设置面板占位。
- * 保存只写定义行字段（save/update 不落 definition_json）；发布走 publish——
+ * 保存走 saveDraft 只落草稿列，已发布行不动；发布走 publish——
  * 它是 definition_json 唯一写入口径，成功后按服务端规范化结果重置草稿（ADR-5）。
  */
 export function DefinitionEditPage() {
@@ -76,9 +78,11 @@ export function DefinitionEditPage() {
       />
     );
   }
+  // has_draft 变化（首次存草稿、放弃草稿、发布清草稿）都靠 key 触发重挂载，
+  // 让画布按服务端回读的最新口径重建，避免手动同步竞态。
   return (
     <DesignerBody
-      key={`${definition.data.id}:${definition.data.current_version ?? 0}`}
+      key={`${definition.data.id}:${definition.data.current_version ?? 0}:${definition.data.has_draft ? 1 : 0}`}
       definition={definition.data}
     />
   );
@@ -88,24 +92,10 @@ interface DesignerBodyProps {
   definition: Definition | null;
 }
 
-interface MetaState {
-  name: string;
-  status: number;
-  group_id: number | null;
-  description: string;
-  icon: string;
-  is_cancelable: number;
-}
-
-function metaFromRow(definition: Definition | null): MetaState {
-  return {
-    name: definition?.name ?? '',
-    status: definition?.status ?? 1,
-    group_id: definition?.group_id ?? null,
-    description: definition?.description ?? '',
-    icon: definition?.icon ?? '',
-    is_cancelable: definition?.is_cancelable ?? 1,
-  };
+/** 保存时随 mutation 走的快照：脏基准要对齐到真正发出去的内容。 */
+interface SaveInput {
+  draft: DefinitionDraft;
+  meta: DraftMetaState;
 }
 
 function DesignerBody({ definition }: DesignerBodyProps) {
@@ -114,15 +104,15 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const queryClient = useQueryClient();
 
   const canManage = definition === null || definition.can_manage !== false;
-  const canSaveRow = useCan(
-    definition === null ? 'sandworkflow:definition:save' : 'sandworkflow:definition:update',
-  );
+  const canSaveRow = useCan('sandworkflow:definition:saveDraft');
+  const canDiscard = useCan('sandworkflow:definition:discardDraft');
   const canPublish = useCan('sandworkflow:definition:publish');
 
-  const { draft, dispatch } = useDefinitionDraft(
-    definition ? loadDefinition(definition.definition_json) : createDraft(),
-  );
-  const [meta, setMeta] = useState<MetaState>(() => metaFromRow(definition));
+  const hasDraft = definition?.has_draft === true;
+  const initial = useMemo(() => draftSourceOf(definition), [definition]);
+
+  const { draft, dispatch } = useDefinitionDraft(initial.draft);
+  const [meta, setMeta] = useState<DraftMetaState>(initial.meta);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [issues, setIssues] = useState<DraftIssue[] | null>(null);
   // 右侧面板双态：节点设置 / 流程设置；点选节点时自动切回节点设置。
@@ -135,7 +125,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const conditionVars = useMemo(() => collectConditionVars(draft.nodeConfig), [draft.nodeConfig]);
 
   // 未保存离开提醒：草稿/reducer 是引用替换，与初始基准做引用比较即脏标记；
-  // 发布后 current_version 变化触发整页重挂载，基准自然重置。
+  // 发布或 has_draft 变化触发整页重挂载，基准自然重置。
   const baseDraftRef = useRef(draft);
   const baseMetaRef = useRef(meta);
   const dirty = draft !== baseDraftRef.current || meta !== baseMetaRef.current;
@@ -149,6 +139,12 @@ function DesignerBody({ definition }: DesignerBodyProps) {
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
+
+  // blocker 判定函数在导航那一刻才执行，必须读 ref：保存成功回调里刚重置的
+  // 基准在本渲染周期还反映不到 dirty 上，新建保存后跳转会误拦。
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  const blocker = useBlocker(() => dirtyRef.current);
 
   // 删除节点/分支后选中的可能是子树里的节点，树里查不到就清掉选中态。
   const selectedNode = selectedKey ? findNode(draft.nodeConfig, selectedKey) : null;
@@ -170,29 +166,36 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   const canWrite = canManage && trimmedName !== '' && trimmedName.length <= NAME_MAX;
 
   const saveMutation = useMutation({
-    mutationFn: (): Promise<{ id: number }> =>
-      definition
-        ? updateDefinition({
-            id: definition.id,
-            ...meta,
-            name: trimmedName,
-            permission_type: draft.flowPermission.type === 2 ? 2 : 1,
-          }).then(() => ({ id: definition.id }))
-        : createDefinition({
-            ...meta,
-            name: trimmedName,
-            permission_type: draft.flowPermission.type === 2 ? 2 : 1,
-          }),
-    onSuccess: (result) => {
+    mutationFn: (input: SaveInput) =>
+      saveDraftDefinition({
+        id: definition?.id,
+        ...input.meta,
+        name: input.meta.name.trim(),
+        definition_json: serializeDraft(input.draft),
+      }),
+    onSuccess: (result, input) => {
       void queryClient.invalidateQueries({ queryKey: ['sandworkflow'] });
+      // 基准对齐到真正发出去的快照；保存途中用户又改过的话继续算脏。
+      baseDraftRef.current = input.draft;
+      baseMetaRef.current = input.meta;
+      dirtyRef.current = draft !== input.draft || meta !== input.meta;
       if (definition === null) {
-        Toast.success(t('designer.toast.created'));
+        Toast.success(t('designer.toast.draftSaved'));
         navigate(`/app/sandworkflow/definitions/${result.id}/edit`, { replace: true });
         return;
       }
-      // 行字段已落库，把脏标记基准对齐到刚保存的 meta（画布内容仍待发布）。
-      baseMetaRef.current = meta;
-      Toast.success(t('designer.toast.saved'));
+      Toast.success(t('designer.toast.draftSaved'));
+    },
+    onError: (error) => {
+      Toast.error(pluginErrorMessage(error, t('designer.toast.loadFailed')));
+    },
+  });
+
+  const discardMutation = useMutation({
+    mutationFn: (definitionId: number) => discardDraftDefinition(definitionId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sandworkflow'] });
+      Toast.success(t('designer.toast.draftDiscarded'));
     },
     onError: (error) => {
       Toast.error(pluginErrorMessage(error, t('designer.toast.loadFailed')));
@@ -200,21 +203,25 @@ function DesignerBody({ definition }: DesignerBodyProps) {
   });
 
   const publishMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (input: SaveInput) =>
       publishDefinition({
         id: definition?.id,
-        name: trimmedName,
-        status: meta.status,
-        definition_json: serializeDraft(draft),
-        group_id: meta.group_id,
-        description: meta.description,
-        icon: meta.icon,
-        is_cancelable: meta.is_cancelable,
+        name: input.meta.name.trim(),
+        status: input.meta.status,
+        definition_json: serializeDraft(input.draft),
+        group_id: input.meta.group_id,
+        description: input.meta.description,
+        icon: input.meta.icon,
+        is_cancelable: input.meta.is_cancelable,
         // 后端以 JSON 内 flowPermission.type 为准回写该列，这里保持一致免得两处口径打架。
-        permission_type: draft.flowPermission.type === 2 ? 2 : 1,
+        permission_type: input.draft.flowPermission.type === 2 ? 2 : 1,
       }),
-    onSuccess: (result) => {
+    onSuccess: (result, input) => {
       void queryClient.invalidateQueries({ queryKey: ['sandworkflow'] });
+      // 发布内容已全部落库，基准对齐发出去的快照，免得离开后提醒误报。
+      baseDraftRef.current = input.draft;
+      baseMetaRef.current = input.meta;
+      dirtyRef.current = draft !== input.draft || meta !== input.meta;
       Toast.success(t('designer.toast.published'));
       if (definition === null) {
         navigate(`/app/sandworkflow/definitions/${result.id}/edit`, { replace: true });
@@ -284,7 +291,18 @@ function DesignerBody({ definition }: DesignerBodyProps) {
       Toast.error(trimmedName ? t('designer.nameTooLong') : t('designer.nameRequired'));
       return;
     }
-    saveMutation.mutate();
+    saveMutation.mutate({ draft, meta });
+  };
+
+  const handleDiscardDraft = () => {
+    if (definition === null) {
+      return;
+    }
+    confirmAction({
+      title: t('designer.discardDraftTitle'),
+      content: t('designer.discardDraftBody'),
+      onOk: () => discardMutation.mutate(definition.id),
+    });
   };
 
   const handlePublish = () => {
@@ -300,7 +318,7 @@ function DesignerBody({ definition }: DesignerBodyProps) {
     confirmAction({
       title: t('designer.publishConfirmTitle', { name: trimmedName }),
       content: t('designer.publishConfirmBody'),
-      onOk: () => publishMutation.mutate(),
+      onOk: () => publishMutation.mutate({ draft, meta }),
     });
   };
 
@@ -372,6 +390,26 @@ function DesignerBody({ definition }: DesignerBodyProps) {
       </div>
       {!canManage ? (
         <Banner type="warning" description={t('designer.notManager')} className="mt-3" />
+      ) : hasDraft ? (
+        <Banner
+          type="warning"
+          className="mt-3"
+          description={
+            <div className="flex items-center justify-between gap-3">
+              <span>{t('designer.draftBanner')}</span>
+              {canDiscard ? (
+                <Button
+                  size="small"
+                  theme="light"
+                  loading={discardMutation.isPending}
+                  onClick={handleDiscardDraft}
+                >
+                  {t('designer.discardDraft')}
+                </Button>
+              ) : null}
+            </div>
+          }
+        />
       ) : (
         <Typography.Text type="secondary" size="small" className="mt-2">
           {t('designer.saveHint')}
@@ -454,6 +492,23 @@ function DesignerBody({ definition }: DesignerBodyProps) {
             </div>
           ))}
         </div>
+      </Modal>
+      <Modal
+        visible={blocker.state === 'blocked'}
+        title={t('designer.unsavedTitle')}
+        onCancel={() => blocker.reset?.()}
+        footer={
+          <>
+            <Button theme="light" onClick={() => blocker.reset?.()}>
+              {t('designer.unsavedStay')}
+            </Button>
+            <Button theme="solid" type="danger" onClick={() => blocker.proceed?.()}>
+              {t('designer.unsavedLeave')}
+            </Button>
+          </>
+        }
+      >
+        {t('designer.unsavedBody')}
       </Modal>
     </div>
   );

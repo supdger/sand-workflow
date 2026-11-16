@@ -180,6 +180,22 @@ export interface DefinitionJson {
   [key: string]: unknown;
 }
 
+/** 草稿信封 meta：键与定义行同名字段一致，缺省表示该项沿用已发布行的值。 */
+export interface DraftMeta {
+  name?: string;
+  status?: number;
+  group_id?: number | null;
+  description?: string;
+  icon?: string;
+  is_cancelable?: number;
+}
+
+/** 草稿信封（read 返回的 draft_json）：meta 是未发布的基础信息，definition_json 是未发布的画布内容。 */
+export interface DraftEnvelope {
+  meta?: DraftMeta;
+  definition_json?: DefinitionJson;
+}
+
 /** 定义行（sand_workflow_definition）；list 每行附 can_manage/group_name。 */
 export interface Definition {
   id: number;
@@ -200,6 +216,12 @@ export interface Definition {
   update_time: string | null;
   can_manage?: boolean;
   group_name?: string;
+  /** 有未发布草稿时为 true。 */
+  has_draft?: boolean;
+  /** 草稿信封；后端以字符串列存储，read 下发的是 JSON 字符串；无草稿或字段缺省为 null。 */
+  draft_json?: DraftEnvelope | string | null;
+  draft_time?: string | null;
+  drafted_by?: number | null;
 }
 
 /** 版本快照行（sand_workflow_definition_version），version_no 倒序返回。 */
@@ -247,6 +269,18 @@ export interface PluginPage<T> {
   per_page: number;
   current_page: number;
   last_page: number;
+}
+
+/** saveDraft 入参：id 缺省建行只留草稿，id>0 只写草稿列不动已发布行。 */
+export interface SaveDraftBody {
+  id?: number;
+  name: string;
+  status?: number;
+  group_id?: number | null;
+  description?: string;
+  icon?: string;
+  is_cancelable?: number;
+  definition_json: DefinitionJson;
 }
 
 /** publish 入参；definition_json 对象或 JSON 字符串皆可，统一传对象。 */

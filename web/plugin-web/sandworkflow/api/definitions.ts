@@ -1,9 +1,10 @@
 import { pluginDelete, pluginGet, pluginPost, pluginPut, type PluginQuery } from './pluginClient';
-import type { Definition, DefinitionVersion, PluginPage, PublishBody } from './types';
+import type { Definition, DefinitionVersion, PluginPage, PublishBody, SaveDraftBody } from './types';
 
 /**
- * 流程定义 CRUD 与发布。路径相对 `/app/sandworkflow/admin`；
- * publish 是 definition_json 的唯一写入口径（save/update 不校验不处理 JSON）。
+ * 流程定义 CRUD、草稿与发布。路径相对 `/app/sandworkflow/admin`；
+ * 编辑页写入走 saveDraft（存草稿）与 publish（落 definition_json 并清草稿），
+ * update 只留给列表页启停用行字段。
  */
 
 export interface DefinitionListQuery extends PluginQuery {
@@ -34,7 +35,7 @@ export function listAvailableDefinitions(query?: DefinitionListQuery): Promise<P
   return pluginGet<PluginPage<Definition>>('/definition/available', { query });
 }
 
-/** 编辑页载入：返回定义行全字段（含 definition_json）+ can_manage。 */
+/** 编辑页载入：定义行全字段 + can_manage + 草稿字段（has_draft/draft_json/draft_time/drafted_by）。 */
 export function getDefinition(id: number): Promise<Definition> {
   return pluginGet<Definition>('/definition/read', { query: { id } });
 }
@@ -44,12 +45,22 @@ export function createDefinition(body: DefinitionWriteBody): Promise<{ id: numbe
   return pluginPost<{ id: number }>('/definition/save', body);
 }
 
-/** 只写行字段，不写 definition_json；返回 '更新成功' 文案。 */
+/** 只写行字段，不写 definition_json；列表页启停用专用，编辑页不调；返回 '更新成功' 文案。 */
 export function updateDefinition(body: DefinitionWriteBody & { id: number }): Promise<string> {
   return pluginPut<string>('/definition/update', body);
 }
 
-/** 发布：definition_json 的唯一规范写入口；后端会规范化改写，成功后必须 read 回读。 */
+/** 保存草稿：id 缺省建行并回 {id}，id>0 只写草稿列不动已发布行。 */
+export function saveDraftDefinition(body: SaveDraftBody): Promise<{ id: number }> {
+  return pluginPost<{ id: number }>('/definition/saveDraft', body);
+}
+
+/** 放弃草稿：清掉草稿列，编辑页回到已发布内容；返回后端文案。 */
+export function discardDraftDefinition(id: number): Promise<string> {
+  return pluginPost<string>('/definition/discardDraft', { id });
+}
+
+/** 发布：definition_json 的唯一规范写入口；后端会规范化改写并清草稿，成功后必须 read 回读。 */
 export function publishDefinition(body: PublishBody): Promise<{ id: number }> {
   return pluginPost<{ id: number }>('/definition/publish', body);
 }

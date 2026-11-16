@@ -35,6 +35,9 @@ CREATE TABLE "sand_workflow_definition" (
   "icon" varchar(1000) DEFAULT NULL,
   "description" varchar(500) DEFAULT NULL,
   "definition_json" jsonb DEFAULT NULL,
+  "draft_json" jsonb DEFAULT NULL, -- 草稿信封：{"meta":行字段,"definition_json":设计器内容}；发布时清空
+  "draft_time" timestamp(0) without time zone DEFAULT NULL, -- 最近一次保存草稿的时间
+  "drafted_by" int DEFAULT NULL, -- 最近一次保存草稿的系统用户 id
   "permission_type" smallint DEFAULT 1,
   "is_cancelable" smallint DEFAULT 1,
   "publish_time" timestamp(0) without time zone DEFAULT NULL,
@@ -295,7 +298,9 @@ INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'读取','','sandworkflow:definition:read',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'保存','','sandworkflow:definition:save',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'更新','','sandworkflow:definition:update',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'删除','','sandworkflow:definition:destroy',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'删除','','sandworkflow:definition:destroy',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'保存草稿','','sandworkflow:definition:saveDraft',3,'','',NULL,'',93,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'放弃草稿','','sandworkflow:definition:discardDraft',3,'','',NULL,'',92,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES

@@ -10,6 +10,7 @@ use plugin\sandworkflow\app\model\FlowDefinitionVersion;
 use plugin\sandworkflow\app\contract\ActorRef;
 use plugin\sandworkflow\app\contract\OrganizationResolutionRequest;
 use plugin\sandworkflow\app\service\DefinitionAdminPolicy;
+use plugin\sandworkflow\app\service\DefinitionDraftCodec;
 use plugin\sandworkflow\app\service\InitiatorScopePolicy;
 use plugin\sandworkflow\app\service\OrganizationParticipantMaterializer;
 use plugin\sandworkflow\app\service\OrganizationParticipantRegistry;
@@ -53,6 +54,10 @@ class DefinitionLogic extends BaseLogic
             'is_cancelable' => $data['is_cancelable'] ?? 1,
             'publish_time' => date('Y-m-d H:i:s'),
             'status' => $data['status'] ?? 1,
+            // 发布落库后草稿即作废，同一行更新里同事务清空
+            'draft_json' => null,
+            'draft_time' => null,
+            'drafted_by' => null,
         ];
 
         return Db::transaction(function () use ($data, $definition, $row, $definitionId) {
@@ -80,6 +85,47 @@ class DefinitionLogic extends BaseLogic
 
             return $definitionId;
         });
+    }
+
+    /**
+     * 草稿只写 draft_* 三列：definition_json 保留已发布内容不动，
+     * 半成品流程不经过 prepareDefinition 校验，也不产生版本。
+     */
+    public function saveDraft(array $data): int
+    {
+        $definitionId = (int) ($data['id'] ?? 0);
+        if ($definitionId > 0) {
+            $this->assertManageable($definitionId);
+        }
+        $definition = $data['definition_json'] ?? [];
+        if (is_string($definition)) {
+            $decoded = json_decode($definition, true);
+            $definition = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($definition) || $definition === []) {
+            throw new ApiException('流程草稿不能为空');
+        }
+        $envelope = DefinitionDraftCodec::pack($data, $definition);
+        $draftColumns = [
+            'draft_json' => $envelope,
+            'draft_time' => date('Y-m-d H:i:s'),
+            'drafted_by' => $this->currentUserId(),
+        ];
+        if ($definitionId > 0) {
+            $this->edit($definitionId, $draftColumns);
+            return $definitionId;
+        }
+        // 从未发布的流程只有草稿：行字段取草稿 meta，definition_json 留空
+        return (int) $this->add($envelope['meta'] + ['definition_json' => null] + $draftColumns);
+    }
+
+    public function discardDraft(int $id): void
+    {
+        if ($id <= 0) {
+            throw new ApiException('流程定义不存在');
+        }
+        $this->assertManageable($id);
+        $this->edit($id, ['draft_json' => null, 'draft_time' => null, 'drafted_by' => null]);
     }
 
     public function edit($id, array $data): mixed

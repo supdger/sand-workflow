@@ -22,5 +22,6 @@ class DefinitionValidate extends BaseValidate
         'save' => ['name', 'status'],
         'update' => ['name', 'status'],
         'publish' => ['name', 'status', 'definition_json'],
+        'saveDraft' => ['name', 'status', 'definition_json'],
     ];
 }

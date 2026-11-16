@@ -8,6 +8,7 @@ use plugin\sandadmin\service\Permission;
 use plugin\sandworkflow\app\logic\DefinitionLogic;
 use plugin\sandworkflow\app\model\FlowDefinition;
 use plugin\sandworkflow\app\service\DefinitionAdminPolicy;
+use plugin\sandworkflow\app\service\DefinitionDraftCodec;
 use plugin\sandworkflow\app\service\InitiatorScopePolicy;
 use plugin\sandworkflow\app\service\ViewerScopeFactory;
 use plugin\sandworkflow\app\service\SandAdminWorkflowContextFactory;
@@ -61,6 +62,7 @@ class DefinitionController extends BaseController
     {
         $row = $this->logic->read($request->input('id', 0))->toArray();
         $row['can_manage'] = $this->canManageRow($row, $this->viewerScope());
+        $row['has_draft'] = DefinitionDraftCodec::hasDraft($row);
         return $this->success($row);
     }
 
@@ -87,6 +89,21 @@ class DefinitionController extends BaseController
         $data = $request->post();
         $this->validate('publish', $data);
         return $this->success(['id' => $this->logic->publish($data)], '发布成功');
+    }
+
+    #[Permission('保存草稿', 'sandworkflow:definition:saveDraft')]
+    public function saveDraft(Request $request): Response
+    {
+        $data = $request->post();
+        $this->validate('saveDraft', $data);
+        return $this->success(['id' => $this->logic->saveDraft($data)], '保存成功');
+    }
+
+    #[Permission('放弃草稿', 'sandworkflow:definition:discardDraft')]
+    public function discardDraft(Request $request): Response
+    {
+        $this->logic->discardDraft((int) $request->post('id', 0));
+        return $this->success('已放弃草稿');
     }
 
     #[Permission('流程定义删除', 'sandworkflow:definition:destroy')]
@@ -132,7 +149,7 @@ class DefinitionController extends BaseController
         if (isset($result['data']) && is_array($result['data'])) {
             foreach ($result['data'] as $index => $row) {
                 if (is_array($row)) {
-                    $result['data'][$index]['can_manage'] = $this->canManageRow($row, $viewer);
+                    $result['data'][$index] = $this->withDraftFlag($row, $viewer);
                 }
             }
             return $result;
@@ -140,11 +157,22 @@ class DefinitionController extends BaseController
         if (array_is_list($result)) {
             foreach ($result as $index => $row) {
                 if (is_array($row)) {
-                    $result[$index]['can_manage'] = $this->canManageRow($row, $viewer);
+                    $result[$index] = $this->withDraftFlag($row, $viewer);
                 }
             }
         }
         return $result;
+    }
+
+    /**
+     * 列表行补 can_manage / has_draft；draft_json 是大字段，不随列表下发。
+     */
+    private function withDraftFlag(array $row, array $viewer): array
+    {
+        $row['can_manage'] = $this->canManageRow($row, $viewer);
+        $row['has_draft'] = DefinitionDraftCodec::hasDraft($row);
+        unset($row['draft_json']);
+        return $row;
     }
 
     private function canManageRow(array $row, array $viewer): bool

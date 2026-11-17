@@ -53,8 +53,9 @@ SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流与审批插件：PHP/Webman 
 
 ## 测试和检查命令
 
-- 本仓无 `composer.json`/`package.json`/测试目录/CI 配置：暂无自动化测试与构建命令
+- 本仓无 `composer.json`/`package.json`/测试目录：暂无自动化测试与构建命令
 - PHP 改动至少 `php -l` 逐文件检查；SQL 迁移按序号追加，已发布不改
+- 契约检查：`tools/contract-check.sh [报告路径]`——按锁定 ref 拉取宿主、装 `server/` 依赖后跑 `php tools/contract-build --kernel-api <本仓根>`，校验 `plugin/sandworkflow/contract/openapi.yaml` 片段与宿主契约零冲突；宿主 ref 用 `SAND_HOST_REF`、仓地址用 `SAND_HOST_URL` 覆盖。CI 快档为 `.github/workflows/contract-fragment.yml`（push/PR 触发同一脚本，报告作 artifact 上传）
 - 真实宿主安装、升级与最小流程验收需隔离环境并获授权（1.0.8 尚未经真实宿主验收，见 README/CHANGELOG）
 
 ## 许可证

@@ -1,0 +1,988 @@
+openapi: 3.1.0
+info:
+  title: SandWorkflow 工作流插件
+  version: "1.0"
+  description: SandWorkflow 管理端接口契约片段。app 目录名 sandworkflow，
+    接口统一落在 /api/admin/v1/plugin/sandworkflow/ 命名空间；
+    权限域按宿主契约约定使用 sand_sandworkflow:（插件代码内
+    #[Permission] 注解的运行时域为 sandworkflow:，两者是不同层面的命名）。
+
+# 插件只登记本域新增码；宿主已登记码（如 IDEMPOTENCY_KEY_REUSED）直接引用。
+x-error-catalog:
+  SAND_WORKFLOW_NOT_FOUND:          {http_status: 404, summary: 流程定义、实例或任务不存在}
+  SAND_WORKFLOW_STATE_INVALID:      {http_status: 409, summary: 流程或任务的当前状态不允许这个操作}
+  SAND_WORKFLOW_ACTION_DENIED:      {http_status: 403, summary: 当前用户不能对这个流程或任务做该操作}
+  SAND_WORKFLOW_ASSIGNEE_INVALID:   {http_status: 422, summary: 处理人或接收人选择无效}
+  SAND_WORKFLOW_DEFINITION_INVALID: {http_status: 422, summary: 流程定义内容不合法}
+
+paths:
+  # ── 参与人候选（发起人/处理人选择器数据源）──
+  /api/admin/v1/plugin/sandworkflow/index/list-users:
+    get:
+      operationId: sandworkflowIndexListUsers
+      summary: 可选用户列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\IndexController::listUsers'
+      x-permission: sand_sandworkflow:index:list-users
+      x-mcp:
+        name: sand_sandworkflow_user_list
+        tier: read
+        title: 可选用户列表
+        description: 列出可选为流程处理人的启用用户（只读）
+        input: {type: object, properties: {}, additionalProperties: false}
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/index/list-roles:
+    get:
+      operationId: sandworkflowIndexListRoles
+      summary: 可选角色列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\IndexController::listRoles'
+      x-permission: sand_sandworkflow:index:list-roles
+      x-mcp:
+        name: sand_sandworkflow_role_list
+        tier: read
+        title: 可选角色列表
+        description: 列出可选为流程处理人的启用角色（只读）
+        input: {type: object, properties: {}, additionalProperties: false}
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/index/list-depts:
+    get:
+      operationId: sandworkflowIndexListDepts
+      summary: 可选部门列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\IndexController::listDepts'
+      x-permission: sand_sandworkflow:index:list-depts
+      x-mcp:
+        name: sand_sandworkflow_dept_list
+        tier: read
+        title: 可选部门列表
+        description: 列出可选为流程处理人的启用部门（只读）
+        input: {type: object, properties: {}, additionalProperties: false}
+      responses: {'200': {description: 契约信封}}
+
+  # ── 流程分组 ──
+  /api/admin/v1/plugin/sandworkflow/group/index:
+    get:
+      operationId: sandworkflowGroupIndex
+      summary: 流程分组列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::index'
+      x-permission: sand_sandworkflow:group:index
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: status, in: query, schema: {type: integer, enum: [1, 2]}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_group_list
+        tier: read
+        title: 流程分组列表
+        description: 分页查询流程分组（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            status: {type: integer, enum: [1, 2]}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/group/all:
+    get:
+      operationId: sandworkflowGroupAll
+      summary: 全部启用分组
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::all'
+      x-permission: sand_sandworkflow:group:all
+      x-mcp:
+        name: sand_sandworkflow_group_all
+        tier: read
+        title: 全部启用分组
+        description: 列出全部启用状态的流程分组（只读）
+        input: {type: object, properties: {}, additionalProperties: false}
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/group/read:
+    get:
+      operationId: sandworkflowGroupRead
+      summary: 流程分组详情
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::read'
+      x-permission: sand_sandworkflow:group:read
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: integer}}
+      x-mcp:
+        name: sand_sandworkflow_group_get
+        tier: read
+        title: 流程分组详情
+        description: 按 id 读取单个流程分组（只读）
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/group/save:
+    post:
+      operationId: sandworkflowGroupSave
+      summary: 新建流程分组
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::save'
+      x-permission: sand_sandworkflow:group:save
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: {type: string, maxLength: 100}
+                status: {type: integer, enum: [1, 2]}
+              required: [name]
+      x-mcp:
+        name: sand_sandworkflow_group_save
+        tier: write
+        title: 新建流程分组
+        description: 创建流程分组
+        input:
+          type: object
+          properties:
+            name: {type: string, maxLength: 100}
+            status: {type: integer, enum: [1, 2]}
+          required: [name]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/group/update:
+    put:
+      operationId: sandworkflowGroupUpdate
+      summary: 更新流程分组
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::update'
+      x-permission: sand_sandworkflow:group:update
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: integer}
+                name: {type: string, maxLength: 100}
+                status: {type: integer, enum: [1, 2]}
+              required: [id]
+      x-mcp:
+        name: sand_sandworkflow_group_update
+        tier: write
+        title: 更新流程分组
+        description: 按 id 更新流程分组
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+            name: {type: string, maxLength: 100}
+            status: {type: integer, enum: [1, 2]}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/group/destroy:
+    delete:
+      operationId: sandworkflowGroupDestroy
+      summary: 删除流程分组
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\GroupController::destroy'
+      x-permission: sand_sandworkflow:group:destroy
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids: {type: array, items: {type: integer}}
+              required: [ids]
+      x-mcp:
+        name: sand_sandworkflow_group_destroy
+        tier: high_risk
+        title: 删除流程分组
+        description: 按 id 批量删除流程分组（不可恢复，高危）
+        input:
+          type: object
+          properties:
+            ids: {type: array, items: {type: integer}}
+          required: [ids]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  # ── 流程定义 ──
+  /api/admin/v1/plugin/sandworkflow/definition/index:
+    get:
+      operationId: sandworkflowDefinitionIndex
+      summary: 流程定义列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::index'
+      x-permission: sand_sandworkflow:definition:index
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: group_id, in: query, schema: {type: integer}}
+        - {name: status, in: query, schema: {type: integer, enum: [1, 2]}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_definition_list
+        tier: read
+        title: 流程定义列表
+        description: 分页查询流程定义（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            group_id: {type: integer}
+            status: {type: integer, enum: [1, 2]}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/available:
+    get:
+      operationId: sandworkflowDefinitionAvailable
+      summary: 可发起流程列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::available'
+      x-permission: sand_sandworkflow:definition:available
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: group_id, in: query, schema: {type: integer}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_definition_available
+        tier: read
+        title: 可发起流程列表
+        description: 列出已发布且启用、可发起的流程定义（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            group_id: {type: integer}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/versions:
+    get:
+      operationId: sandworkflowDefinitionVersions
+      summary: 流程定义版本列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::versions'
+      x-permission: sand_sandworkflow:definition:versions
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: integer}}
+      x-mcp:
+        name: sand_sandworkflow_definition_versions
+        tier: read
+        title: 流程定义版本列表
+        description: 按定义 id 列出历史发布版本（只读）
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/read:
+    get:
+      operationId: sandworkflowDefinitionRead
+      summary: 流程定义详情
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::read'
+      x-permission: sand_sandworkflow:definition:read
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: integer}}
+      x-mcp:
+        name: sand_sandworkflow_definition_get
+        tier: read
+        title: 流程定义详情
+        description: 按 id 读取流程定义含定义 JSON（只读）
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/save:
+    post:
+      operationId: sandworkflowDefinitionSave
+      summary: 新建流程定义
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::save'
+      x-permission: sand_sandworkflow:definition:save
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: {type: string, maxLength: 120}
+                group_id: {type: integer}
+                icon: {type: string}
+                description: {type: string}
+                status: {type: integer, enum: [1, 2]}
+              required: [name]
+      x-mcp:
+        name: sand_sandworkflow_definition_save
+        tier: write
+        title: 新建流程定义
+        description: 创建流程定义草稿（不含流程图，发布后生效）
+        input:
+          type: object
+          properties:
+            name: {type: string, maxLength: 120}
+            group_id: {type: integer}
+            icon: {type: string}
+            description: {type: string}
+            status: {type: integer, enum: [1, 2]}
+          required: [name]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/update:
+    put:
+      operationId: sandworkflowDefinitionUpdate
+      summary: 更新流程定义
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::update'
+      x-permission: sand_sandworkflow:definition:update
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: integer}
+                name: {type: string, maxLength: 120}
+                group_id: {type: integer}
+                icon: {type: string}
+                description: {type: string}
+                status: {type: integer, enum: [1, 2]}
+              required: [id]
+      x-mcp:
+        name: sand_sandworkflow_definition_update
+        tier: write
+        title: 更新流程定义
+        description: 按 id 更新流程定义基本信息
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+            name: {type: string, maxLength: 120}
+            group_id: {type: integer}
+            icon: {type: string}
+            description: {type: string}
+            status: {type: integer, enum: [1, 2]}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/publish:
+    post:
+      operationId: sandworkflowDefinitionPublish
+      summary: 发布流程定义
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::publish'
+      x-permission: sand_sandworkflow:definition:publish
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_DEFINITION_INVALID]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: integer}
+                name: {type: string, maxLength: 120}
+                group_id: {type: integer}
+                icon: {type: string}
+                description: {type: string}
+                status: {type: integer, enum: [1, 2]}
+                permission_type: {type: integer}
+                is_cancelable: {type: integer, enum: [0, 1]}
+                definition_json: {type: object}
+              required: [name, definition_json]
+      x-mcp:
+        name: sand_sandworkflow_definition_publish
+        tier: write
+        title: 发布流程定义
+        description: 校验并发布流程定义，生成一个新版本
+        input:
+          type: object
+          properties:
+            id: {type: integer}
+            name: {type: string, maxLength: 120}
+            group_id: {type: integer}
+            icon: {type: string}
+            description: {type: string}
+            status: {type: integer, enum: [1, 2]}
+            permission_type: {type: integer}
+            is_cancelable: {type: integer, enum: [0, 1]}
+            definition_json: {type: object}
+          required: [name, definition_json]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/definition/destroy:
+    delete:
+      operationId: sandworkflowDefinitionDestroy
+      summary: 删除流程定义
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\DefinitionController::destroy'
+      x-permission: sand_sandworkflow:definition:destroy
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids: {type: array, items: {type: integer}}
+              required: [ids]
+      x-mcp:
+        name: sand_sandworkflow_definition_destroy
+        tier: high_risk
+        title: 删除流程定义
+        description: 按 id 批量删除流程定义（不可恢复，高危）
+        input:
+          type: object
+          properties:
+            ids: {type: array, items: {type: integer}}
+          required: [ids]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  # ── 流程实例 ──
+  /api/admin/v1/plugin/sandworkflow/instance/index:
+    get:
+      operationId: sandworkflowInstanceIndex
+      summary: 流程实例列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::index'
+      x-permission: sand_sandworkflow:instance:index
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: definition_id, in: query, schema: {type: integer}}
+        - {name: flow_status, in: query, schema: {type: integer}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_instance_list
+        tier: read
+        title: 流程实例列表
+        description: 分页查询流程实例（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            definition_id: {type: integer}
+            flow_status: {type: integer}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/pending-list:
+    get:
+      operationId: sandworkflowInstancePendingList
+      summary: 待我处理的流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::pendingList'
+      x-permission: sand_sandworkflow:instance:pending-list
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_instance_pending_list
+        tier: read
+        title: 待我处理的流程
+        description: 列出当前用户待办中的流程任务（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/my-list:
+    get:
+      operationId: sandworkflowInstanceMyList
+      summary: 我发起的流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::myList'
+      x-permission: sand_sandworkflow:instance:my-list
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_instance_my_list
+        tier: read
+        title: 我发起的流程
+        description: 列出当前用户发起的流程实例（只读）
+        input:
+          type: object
+          properties:
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/processed-list:
+    get:
+      operationId: sandworkflowInstanceProcessedList
+      summary: 我已处理的流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::processedList'
+      x-permission: sand_sandworkflow:instance:processed-list
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_instance_processed_list
+        tier: read
+        title: 我已处理的流程
+        description: 列出当前用户已处理过的流程任务（只读）
+        input:
+          type: object
+          properties:
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/copy-list:
+    get:
+      operationId: sandworkflowInstanceCopyList
+      summary: 抄送给我的流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::copyList'
+      x-permission: sand_sandworkflow:instance:copy-list
+      parameters:
+        - {name: keywords, in: query, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_instance_copy_list
+        tier: read
+        title: 抄送给我的流程
+        description: 列出抄送给当前用户的流程实例（只读）
+        input:
+          type: object
+          properties:
+            keywords: {type: string}
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/get-detail:
+    get:
+      operationId: sandworkflowInstanceGetDetail
+      summary: 流程实例详情
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::getDetail'
+      x-permission: sand_sandworkflow:instance:get-detail
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_ACTION_DENIED]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      x-mcp:
+        name: sand_sandworkflow_instance_detail
+        tier: read
+        title: 流程实例详情
+        description: 按 id 读取流程实例详情（含节点与任务视图，只读）
+        input:
+          type: object
+          properties:
+            id: {type: string}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/start:
+    post:
+      operationId: sandworkflowInstanceStart
+      summary: 发起流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::start'
+      x-permission: sand_sandworkflow:instance:start
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ASSIGNEE_INVALID, IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                definition_id: {type: integer}
+                name: {type: string, maxLength: 120}
+                form_value: {type: object}
+                assignee_choices: {type: object}
+                request_id: {type: string, maxLength: 64}
+              required: [definition_id, name]
+      x-mcp:
+        name: sand_sandworkflow_instance_start
+        tier: write
+        title: 发起流程
+        description: 按已发布的流程定义发起一个流程实例
+        input:
+          type: object
+          properties:
+            definition_id: {type: integer}
+            name: {type: string, maxLength: 120}
+            form_value: {type: object}
+            assignee_choices: {type: object}
+          required: [definition_id, name]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/approve:
+    post:
+      operationId: sandworkflowInstanceApprove
+      summary: 审批通过
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::approve'
+      x-permission: sand_sandworkflow:instance:approve
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                comment: {type: string, maxLength: 1000}
+                form_value: {type: object}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_approve
+        tier: write
+        title: 审批通过
+        description: 对当前用户的待办任务做通过处理
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            comment: {type: string, maxLength: 1000}
+            form_value: {type: object}
+          required: [task_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/reject:
+    post:
+      operationId: sandworkflowInstanceReject
+      summary: 审批拒绝
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::reject'
+      x-permission: sand_sandworkflow:instance:reject
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                comment: {type: string, maxLength: 1000}
+                form_value: {type: object}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_reject
+        tier: write
+        title: 审批拒绝
+        description: 对当前用户的待办任务做拒绝处理
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            comment: {type: string, maxLength: 1000}
+            form_value: {type: object}
+          required: [task_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/cancel:
+    post:
+      operationId: sandworkflowInstanceCancel
+      summary: 撤销流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::cancel'
+      x-permission: sand_sandworkflow:instance:cancel
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: string}
+              required: [id]
+      x-mcp:
+        name: sand_sandworkflow_instance_cancel
+        tier: write
+        title: 撤销流程
+        description: 发起人撤销自己发起且允许撤销的流程实例
+        input:
+          type: object
+          properties:
+            id: {type: string}
+          required: [id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/comment:
+    post:
+      operationId: sandworkflowInstanceComment
+      summary: 评论流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::comment'
+      x-permission: sand_sandworkflow:instance:comment
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_ACTION_DENIED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instance_id: {type: string}
+                task_id: {type: string}
+                comment: {type: string, maxLength: 1000}
+              required: [instance_id, comment]
+      x-mcp:
+        name: sand_sandworkflow_instance_comment
+        tier: write
+        title: 评论流程
+        description: 对流程实例追加一条评论（须为流程参与者）
+        input:
+          type: object
+          properties:
+            instance_id: {type: string}
+            task_id: {type: string}
+            comment: {type: string, maxLength: 1000}
+          required: [instance_id, comment]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/transfer:
+    post:
+      operationId: sandworkflowInstanceTransfer
+      summary: 转办流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::transfer'
+      x-permission: sand_sandworkflow:instance:transfer
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, SAND_WORKFLOW_ASSIGNEE_INVALID]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                assignee_id: {type: integer}
+                comment: {type: string, maxLength: 1000}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id, assignee_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_transfer
+        tier: write
+        title: 转办流程
+        description: 把当前用户的待办任务转给指定用户处理
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            assignee_id: {type: integer}
+            comment: {type: string, maxLength: 1000}
+          required: [task_id, assignee_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/add-sign:
+    post:
+      operationId: sandworkflowInstanceAddSign
+      summary: 流程加签
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::addSign'
+      x-permission: sand_sandworkflow:instance:add-sign
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, SAND_WORKFLOW_ASSIGNEE_INVALID,
+        IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                assignee_id: {type: integer}
+                comment: {type: string, maxLength: 1000}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id, assignee_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_add_sign
+        tier: write
+        title: 流程加签
+        description: 给当前任务追加一位处理人
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            assignee_id: {type: integer}
+            comment: {type: string, maxLength: 1000}
+          required: [task_id, assignee_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/del-sign:
+    post:
+      operationId: sandworkflowInstanceDelSign
+      summary: 流程减签
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::delSign'
+      x-permission: sand_sandworkflow:instance:del-sign
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, SAND_WORKFLOW_ASSIGNEE_INVALID,
+        IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                assignee_id: {type: integer}
+                comment: {type: string, maxLength: 1000}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id, assignee_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_del_sign
+        tier: write
+        title: 流程减签
+        description: 移除当前任务的一位待办处理人
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            assignee_id: {type: integer}
+            comment: {type: string, maxLength: 1000}
+          required: [task_id, assignee_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/back-node-list:
+    post:
+      operationId: sandworkflowInstanceBackNodeList
+      summary: 可回退节点列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::backNodeList'
+      x-permission: sand_sandworkflow:instance:back-node-list
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_ACTION_DENIED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+              required: [task_id]
+      # 该端点虽为 POST 但只读，挂 read 档
+      x-mcp:
+        name: sand_sandworkflow_instance_back_nodes
+        tier: read
+        title: 可回退节点列表
+        description: 查询当前任务允许回退到的历史节点（只读）
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+          required: [task_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  /api/admin/v1/plugin/sandworkflow/instance/back:
+    post:
+      operationId: sandworkflowInstanceBack
+      summary: 回退流程
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\InstanceController::back'
+      x-permission: sand_sandworkflow:instance:back
+      x-error-codes: [SAND_WORKFLOW_NOT_FOUND, SAND_WORKFLOW_STATE_INVALID,
+        SAND_WORKFLOW_ACTION_DENIED, IDEMPOTENCY_KEY_REUSED]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_id: {type: string}
+                target_node_id: {type: string}
+                comment: {type: string, maxLength: 1000}
+                request_id: {type: string, maxLength: 64}
+              required: [task_id, target_node_id]
+      x-mcp:
+        name: sand_sandworkflow_instance_back
+        tier: write
+        title: 回退流程
+        description: 把当前任务回退到指定的历史节点重新处理
+        input:
+          type: object
+          properties:
+            task_id: {type: string}
+            target_node_id: {type: string}
+            comment: {type: string, maxLength: 1000}
+          required: [task_id, target_node_id]
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}
+
+  # ── 任务视角 ──
+  /api/admin/v1/plugin/sandworkflow/task/pending-list:
+    get:
+      operationId: sandworkflowTaskPendingList
+      summary: 待办任务列表
+      tags: [sandworkflow]
+      x-handler: 'plugin\sandworkflow\app\controller\TaskController::pendingList'
+      x-permission: sand_sandworkflow:task:pending-list
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      x-mcp:
+        name: sand_sandworkflow_task_pending_list
+        tier: read
+        title: 待办任务列表
+        description: 列出当前用户的待办任务（与待办流程同数据源，只读）
+        input:
+          type: object
+          properties:
+            page: {type: integer, minimum: 1}
+            page_size: {type: integer, minimum: 1, maximum: 100}
+          additionalProperties: false
+      responses: {'200': {description: 契约信封}}

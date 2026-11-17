@@ -1,0 +1,26 @@
+name: contract-fragment
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  kernel-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: kernel_api 契约片段检查
+        run: tools/contract-check.sh var/contract-check-report.json
+
+      - name: 上传检查报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-check-report
+          path: var/contract-check-report.json
+          if-no-files-found: ignore

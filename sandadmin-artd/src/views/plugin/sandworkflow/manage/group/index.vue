@@ -14,7 +14,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton
-              v-permission="'sandworkflow:group:save'"
+              v-permission="'sand_sandworkflow:group:save'"
               @click="showDialog('add')"
               v-ripple
             >
@@ -22,7 +22,7 @@
               新增
             </ElButton>
             <ElButton
-              v-permission="'sandworkflow:group:destroy'"
+              v-permission="'sand_sandworkflow:group:destroy'"
               :disabled="selectedRows.length === 0"
               @click="deleteSelectedRows(api.group.delete, refreshData)"
               v-ripple
@@ -48,12 +48,12 @@
         <template #operation="{ row }">
           <ElSpace>
             <SaButton
-              v-permission="'sandworkflow:group:update'"
+              v-permission="'sand_sandworkflow:group:update'"
               type="secondary"
               @click="showDialog('edit', row)"
             />
             <SaButton
-              v-permission="'sandworkflow:group:destroy'"
+              v-permission="'sand_sandworkflow:group:destroy'"
               type="error"
               @click="deleteRow(row, api.group.delete, refreshData)"
             />

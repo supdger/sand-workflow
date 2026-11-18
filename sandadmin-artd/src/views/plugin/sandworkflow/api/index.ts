@@ -161,49 +161,49 @@ export default {
   organization: {
     users() {
       return request.get<FlowUser[]>({
-        url: '/admin/index/listUsers'
+        url: '/admin/v1/plugin/sandworkflow/index/list-users'
       })
     },
     roles() {
-      return request.get<FlowRole[]>({ url: '/admin/index/listRoles' })
+      return request.get<FlowRole[]>({ url: '/admin/v1/plugin/sandworkflow/index/list-roles' })
     },
     depts() {
-      return request.get<FlowDept[]>({ url: '/admin/index/listDepts' })
+      return request.get<FlowDept[]>({ url: '/admin/v1/plugin/sandworkflow/index/list-depts' })
     }
   },
   group: {
     list(params: QueryParams) {
       return request.get<Api.Common.ApiPage>({
-        url: '/admin/group/index',
+        url: '/admin/v1/plugin/sandworkflow/group/index',
         params
       })
     },
     all() {
       return request.get<FlowGroup[]>({
-        url: '/admin/group/all'
+        url: '/admin/v1/plugin/sandworkflow/group/all'
       })
     },
     read(id: number) {
       return request.get<FlowGroup>({
-        url: '/admin/group/read',
+        url: '/admin/v1/plugin/sandworkflow/group/read',
         params: { id }
       })
     },
     save(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/group/save',
+        url: '/admin/v1/plugin/sandworkflow/group/save',
         data
       })
     },
     update(data: QueryParams) {
       return request.put<Api.Common.ApiData>({
-        url: '/admin/group/update',
+        url: '/admin/v1/plugin/sandworkflow/group/update',
         data
       })
     },
     delete(data: QueryParams) {
       return request.del<Api.Common.ApiData>({
-        url: '/admin/group/destroy',
+        url: '/admin/v1/plugin/sandworkflow/group/destroy',
         data
       })
     }
@@ -211,49 +211,49 @@ export default {
   definition: {
     list(params: QueryParams) {
       return request.get<Api.Common.ApiPage>({
-        url: '/admin/definition/index',
+        url: '/admin/v1/plugin/sandworkflow/definition/index',
         params
       })
     },
     available(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowDefinition>>({
-        url: '/admin/definition/available',
+        url: '/admin/v1/plugin/sandworkflow/definition/available',
         params
       })
     },
     read(id: number) {
       return request.get<FlowDefinition>({
-        url: '/admin/definition/read',
+        url: '/admin/v1/plugin/sandworkflow/definition/read',
         params: { id }
       })
     },
     versions(id: number) {
       return request.get<FlowDefinitionVersion[]>({
-        url: '/admin/definition/versions',
+        url: '/admin/v1/plugin/sandworkflow/definition/versions',
         params: { id }
       })
     },
     save(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/definition/save',
+        url: '/admin/v1/plugin/sandworkflow/definition/save',
         data
       })
     },
     publish(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/definition/publish',
+        url: '/admin/v1/plugin/sandworkflow/definition/publish',
         data
       })
     },
     update(data: QueryParams) {
       return request.put<Api.Common.ApiData>({
-        url: '/admin/definition/update',
+        url: '/admin/v1/plugin/sandworkflow/definition/update',
         data
       })
     },
     delete(data: QueryParams) {
       return request.del<Api.Common.ApiData>({
-        url: '/admin/definition/destroy',
+        url: '/admin/v1/plugin/sandworkflow/definition/destroy',
         data
       })
     }
@@ -261,67 +261,67 @@ export default {
   instance: {
     list(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowInstance>>({
-        url: '/admin/instance/index',
+        url: '/admin/v1/plugin/sandworkflow/instance/index',
         params
       })
     },
     pending(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowTask>>({
-        url: '/admin/instance/pendingList',
+        url: '/admin/v1/plugin/sandworkflow/instance/pending-list',
         params
       })
     },
     mine(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowInstance>>({
-        url: '/admin/instance/myList',
+        url: '/admin/v1/plugin/sandworkflow/instance/my-list',
         params
       })
     },
     processed(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowTask>>({
-        url: '/admin/instance/processedList',
+        url: '/admin/v1/plugin/sandworkflow/instance/processed-list',
         params
       })
     },
     copyList(params: QueryParams) {
       return request.get<Api.Common.ApiPage<FlowInstance>>({
-        url: '/admin/instance/copyList',
+        url: '/admin/v1/plugin/sandworkflow/instance/copy-list',
         params
       })
     },
     start(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/instance/start',
+        url: '/admin/v1/plugin/sandworkflow/instance/start',
         data
       })
     },
     detail(id: WorkflowRuntimeId) {
       return request.get<FlowInstanceDetail>({
-        url: '/admin/instance/getDetail',
+        url: '/admin/v1/plugin/sandworkflow/instance/get-detail',
         params: { id }
       })
     },
     approve(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/instance/approve',
+        url: '/admin/v1/plugin/sandworkflow/instance/approve',
         data
       })
     },
     reject(data: QueryParams) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/instance/reject',
+        url: '/admin/v1/plugin/sandworkflow/instance/reject',
         data
       })
     },
     cancel(id: WorkflowRuntimeId) {
       return request.post<Api.Common.ApiData>({
-        url: '/admin/instance/cancel',
+        url: '/admin/v1/plugin/sandworkflow/instance/cancel',
         data: { id }
       })
     },
     comment(data: { instance_id: WorkflowRuntimeId; comment: string; task_id?: WorkflowRuntimeId }) {
       return request.post<FlowLog>({
-        url: '/admin/instance/comment',
+        url: '/admin/v1/plugin/sandworkflow/instance/comment',
         data
       })
     },
@@ -332,7 +332,7 @@ export default {
       request_id?: string
     }) {
       return request.post<FlowTask>({
-        url: '/admin/instance/transfer',
+        url: '/admin/v1/plugin/sandworkflow/instance/transfer',
         data
       })
     },
@@ -343,7 +343,7 @@ export default {
       request_id?: string
     }) {
       return request.post<FlowTask>({
-        url: '/admin/instance/addSign',
+        url: '/admin/v1/plugin/sandworkflow/instance/add-sign',
         data
       })
     },
@@ -354,13 +354,13 @@ export default {
       request_id?: string
     }) {
       return request.post<FlowTask>({
-        url: '/admin/instance/delSign',
+        url: '/admin/v1/plugin/sandworkflow/instance/del-sign',
         data
       })
     },
     backNodeList(data: { task_id: WorkflowRuntimeId }) {
       return request.post<FlowBackNode[]>({
-        url: '/admin/instance/backNodeList',
+        url: '/admin/v1/plugin/sandworkflow/instance/back-node-list',
         data
       })
     },
@@ -371,7 +371,7 @@ export default {
       request_id?: string
     }) {
       return request.post<FlowInstanceDetail>({
-        url: '/admin/instance/back',
+        url: '/admin/v1/plugin/sandworkflow/instance/back',
         data
       })
     }

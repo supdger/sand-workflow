@@ -37,7 +37,7 @@ SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流与审批插件：PHP/Webman 
 代码：
 
 - 类 PascalCase、函数/变量 camelCase、常量大写蛇形；函数/方法 ≤4 词、动词开头；不用 `Manager/Helper/Util/Processor/Wrapper/Info/Data` 收尾；不用 `usr/pwd/cnt/msg/btn/tbl/mgr/svc/cfg/val/ret` 等自造缩写；变量名不带类型后缀；布尔 `is/has/can/should` 开头
-- 前端组件 `PascalCase.tsx`、hook `useXxx.ts`、测试 `同名.test.ts(x)`；PHP 遵守 PSR-12/PSR-4；管理端路由组带 `/app/sandworkflow` 前缀
+- 前端组件 `PascalCase.tsx`、hook `useXxx.ts`、测试 `同名.test.ts(x)`；PHP 遵守 PSR-12/PSR-4；接口路径统一 `/api/admin/v1/plugin/sandworkflow/*`，权限码域 `sand_sandworkflow:`（注解、契约、菜单 slug 三处同码）
 
 注释：
 
@@ -53,8 +53,11 @@ SandWorkflow 是 SandAdmin 的 PostgreSQL 工作流与审批插件：PHP/Webman 
 
 ## 测试和检查命令
 
-- 本仓无 `composer.json`/`package.json`/测试目录/CI 配置：暂无自动化测试与构建命令
+- 本仓无 `composer.json`/`package.json`：无自动化构建命令
 - PHP 改动至少 `php -l` 逐文件检查；SQL 迁移按序号追加，已发布不改
+- `config/route.php` 是宿主契约生成器产出的薄壳（转发 `route.generated.php` 并 `disableDefaultRoute`），不手写路由；改动契约片段后须用宿主 `tools/contract-build` 重新生成两份产物
+- 契约检查：`tools/contract-check.sh [报告路径]`——按锁定 ref 拉取宿主、装 `server/` 依赖后跑 `php tools/contract-build --kernel-api <本仓根>`（含薄壳/路由表/Permission 码/x-handler 的运行时对齐检查），再把本仓插件复制进宿主克隆重跑生成器，逐字节比对 `config/route.php` 与 `config/route.generated.php`；宿主 ref 用 `SAND_HOST_REF`、仓地址用 `SAND_HOST_URL` 覆盖。CI 快档为 `.github/workflows/contract-fragment.yml`（push/PR 触发同一脚本，报告作 artifact 上传）
+- 权限迁移测试：`SAND_TEST_DB_URL=pgsql://user@host:5432/<已有库> php tests/permission-migration-test.php`——在目标库内建临时 schema 验证 update.sql 的 slug 迁移不丢角色授权；无 DSN 时跳过
 - 真实宿主安装、升级与最小流程验收需隔离环境并获授权（1.0.8 尚未经真实宿主验收，见 README/CHANGELOG）
 
 ## 许可证

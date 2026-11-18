@@ -12,7 +12,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton
-              v-permission="'sandworkflow:definition:save'"
+              v-permission="'sand_sandworkflow:definition:save'"
               @click="navigateEditor()"
               v-ripple
             >
@@ -20,7 +20,7 @@
               新增流程
             </ElButton>
             <ElButton
-              v-permission="'sandworkflow:definition:destroy'"
+              v-permission="'sand_sandworkflow:definition:destroy'"
               :disabled="selectedRows.length === 0"
               @click="deleteSelectedRows(api.definition.delete, refreshData)"
               v-ripple
@@ -47,20 +47,20 @@
         <template #operation="{ row }">
           <div class="flex gap-2">
             <SaButton
-              v-permission="'sandworkflow:definition:update'"
+              v-permission="'sand_sandworkflow:definition:update'"
               type="secondary"
               toolTip="编辑流程"
               @click="navigateEditor(row.id)"
             />
             <SaButton
-              v-permission="'sandworkflow:definition:versions'"
+              v-permission="'sand_sandworkflow:definition:versions'"
               type="primary"
               icon="ri:history-line"
               toolTip="版本历史"
               @click="openVersions(row)"
             />
             <SaButton
-              v-permission="'sandworkflow:definition:destroy'"
+              v-permission="'sand_sandworkflow:definition:destroy'"
               type="error"
               toolTip="删除流程"
               @click="deleteRow(row, api.definition.delete, refreshData)"

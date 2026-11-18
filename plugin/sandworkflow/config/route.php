@@ -1,43 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
+// <contract-generated> 本文件由 tools/contract-build 生成，请勿手改；
+// 改了会在契约一致性门禁（tools/contract-build --check）被打回。
+// 源: contract/openapi.yaml
+// 源: server/plugin/sandworkflow/contract/openapi.yaml
+// 源哈希: sha256:2474cb7c22af33ac23fdece56097401f24b3de6245502d9ba295eda4daf6560d
+// 生成器: contract-build v1
+
 use Webman\Route;
-use plugin\sandworkflow\app\controller\DefinitionController;
-use plugin\sandworkflow\app\controller\GroupController;
-use plugin\sandworkflow\app\controller\IndexController;
-use plugin\sandworkflow\app\controller\InstanceController;
-use plugin\sandworkflow\app\controller\TaskController;
 
-Route::group('/app/sandworkflow/admin', function () {
-    Route::get('/index/listUsers', [IndexController::class, 'listUsers']);
-    Route::get('/index/listRoles', [IndexController::class, 'listRoles']);
-    Route::get('/index/listDepts', [IndexController::class, 'listDepts']);
-
-    fastRoute('group', GroupController::class);
-    Route::get('/group/all', [GroupController::class, 'all']);
-
-    fastRoute('definition', DefinitionController::class);
-    Route::get('/definition/available', [DefinitionController::class, 'available']);
-    Route::get('/definition/versions', [DefinitionController::class, 'versions']);
-    Route::post('/definition/publish', [DefinitionController::class, 'publish']);
-
-    fastRoute('instance', InstanceController::class);
-    Route::get('/instance/pendingList', [InstanceController::class, 'pendingList']);
-    Route::get('/instance/myList', [InstanceController::class, 'myList']);
-    Route::get('/instance/processedList', [InstanceController::class, 'processedList']);
-    Route::get('/instance/copyList', [InstanceController::class, 'copyList']);
-    Route::get('/instance/getDetail', [InstanceController::class, 'getDetail']);
-    Route::post('/instance/start', [InstanceController::class, 'start']);
-    Route::post('/instance/approve', [InstanceController::class, 'approve']);
-    Route::post('/instance/reject', [InstanceController::class, 'reject']);
-    Route::post('/instance/cancel', [InstanceController::class, 'cancel']);
-    Route::post('/instance/comment', [InstanceController::class, 'comment']);
-    Route::post('/instance/transfer', [InstanceController::class, 'transfer']);
-    Route::post('/instance/addSign', [InstanceController::class, 'addSign']);
-    Route::post('/instance/delSign', [InstanceController::class, 'delSign']);
-    Route::post('/instance/backNodeList', [InstanceController::class, 'backNodeList']);
-    Route::post('/instance/back', [InstanceController::class, 'back']);
-
-    Route::get('/task/pendingList', [TaskController::class, 'pendingList']);
-});
+require __DIR__ . '/route.generated.php';
 
 Route::disableDefaultRoute('sandworkflow');

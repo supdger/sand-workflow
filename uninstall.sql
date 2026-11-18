@@ -3,7 +3,8 @@ BEGIN;
 
 DELETE FROM "sand_system_role_menu" WHERE "menu_id" IN (
   SELECT "id" FROM "sand_system_menu"
-  WHERE "slug" LIKE 'sandworkflow:%'
+  WHERE "slug" LIKE 'sand_sandworkflow:%'
+     OR "slug" LIKE 'sandworkflow:%'
      OR "component" LIKE '/plugin/sandworkflow/%'
      OR "code" = 'SandWorkflow'
      OR "code" = 'SandWorkflowCenter'
@@ -14,7 +15,8 @@ DELETE FROM "sand_system_role_menu" WHERE "menu_id" IN (
 );
 
 DELETE FROM "sand_system_menu"
-WHERE "slug" LIKE 'sandworkflow:%'
+WHERE "slug" LIKE 'sand_sandworkflow:%'
+   OR "slug" LIKE 'sandworkflow:%'
    OR "component" LIKE '/plugin/sandworkflow/%'
    OR "code" = 'SandWorkflow'
    OR "code" = 'SandWorkflowCenter'

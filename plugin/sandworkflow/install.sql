@@ -188,7 +188,8 @@ CREATE INDEX "idx_sand_workflow_log_idx_auditor_id" ON "sand_workflow_log" ("aud
 DELETE FROM "sand_system_role_menu" WHERE "menu_id" IN (
   SELECT "id" FROM (
     SELECT "id" FROM "sand_system_menu"
-    WHERE "slug" LIKE 'sandworkflow:%'
+    WHERE "slug" LIKE 'sand_sandworkflow:%'
+    OR "slug" LIKE 'sandworkflow:%'
        OR "component" LIKE '/plugin/sandworkflow/%'
        OR "code" IN ('SandWorkflow','SandWorkflowCenter','SandWorkflowManage')
        OR "name" LIKE 'sandworkflow/%'
@@ -198,7 +199,8 @@ DELETE FROM "sand_system_role_menu" WHERE "menu_id" IN (
 );
 
 DELETE FROM "sand_system_menu"
-WHERE "slug" LIKE 'sandworkflow:%'
+WHERE "slug" LIKE 'sand_sandworkflow:%'
+    OR "slug" LIKE 'sandworkflow:%'
    OR "component" LIKE '/plugin/sandworkflow/%'
    OR "code" IN ('SandWorkflow','SandWorkflowCenter','SandWorkflowManage')
    OR "name" LIKE 'sandworkflow/%'
@@ -222,50 +224,50 @@ VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowCenter'),'发起审批','sandworkflow/center/start','',2,'start','/plugin/sandworkflow/center/start/index',NULL,'ri:send-plane-line',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/start'),'发起','','sandworkflow:instance:start',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/start'),'可发起列表','','sandworkflow:definition:available',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/start'),'发起','','sand_sandworkflow:instance:start',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/start'),'可发起列表','','sand_sandworkflow:definition:available',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowCenter'),'待审批','sandworkflow/center/task','',2,'task','/plugin/sandworkflow/center/task/index',NULL,'ri:checkbox-circle-line',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'待办','','sandworkflow:instance:pendingList',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'任务待办','','sandworkflow:task:pendingList',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'通过','','sandworkflow:instance:approve',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'拒绝','','sandworkflow:instance:reject',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'评论','','sandworkflow:instance:comment',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'转办','','sandworkflow:instance:transfer',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'加签','','sandworkflow:instance:addSign',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'减签','','sandworkflow:instance:delSign',3,'','',NULL,'',93,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'可回退节点','','sandworkflow:instance:backNodeList',3,'','',NULL,'',92,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'回退','','sandworkflow:instance:back',3,'','',NULL,'',91,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'详情','','sandworkflow:instance:getDetail',3,'','',NULL,'',90,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'待办','','sand_sandworkflow:instance:pending-list',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'任务待办','','sand_sandworkflow:task:pending-list',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'通过','','sand_sandworkflow:instance:approve',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'拒绝','','sand_sandworkflow:instance:reject',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'评论','','sand_sandworkflow:instance:comment',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'转办','','sand_sandworkflow:instance:transfer',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'加签','','sand_sandworkflow:instance:add-sign',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'减签','','sand_sandworkflow:instance:del-sign',3,'','',NULL,'',93,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'可回退节点','','sand_sandworkflow:instance:back-node-list',3,'','',NULL,'',92,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'回退','','sand_sandworkflow:instance:back',3,'','',NULL,'',91,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/task'),'详情','','sand_sandworkflow:instance:get-detail',3,'','',NULL,'',90,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowCenter'),'我的申请','sandworkflow/center/my','',2,'my','/plugin/sandworkflow/center/my/index',NULL,'ri:file-list-3-line',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'列表','','sandworkflow:instance:myList',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'撤销','','sandworkflow:instance:cancel',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'详情','','sandworkflow:instance:getDetail',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'列表','','sand_sandworkflow:instance:my-list',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'撤销','','sand_sandworkflow:instance:cancel',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/my'),'详情','','sand_sandworkflow:instance:get-detail',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowCenter'),'已处理','sandworkflow/center/processed','',2,'processed','/plugin/sandworkflow/center/processed/index',NULL,'ri:check-double-line',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/processed'),'已处理列表','','sandworkflow:instance:processedList',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/processed'),'详情','','sandworkflow:instance:getDetail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/processed'),'已处理列表','','sand_sandworkflow:instance:processed-list',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/processed'),'详情','','sand_sandworkflow:instance:get-detail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowCenter'),'抄送给我','sandworkflow/center/copy','',2,'copy','/plugin/sandworkflow/center/copy/index',NULL,'ri:share-forward-line',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/copy'),'列表','','sandworkflow:instance:copyList',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/copy'),'详情','','sandworkflow:instance:getDetail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/copy'),'列表','','sand_sandworkflow:instance:copy-list',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/center/copy'),'详情','','sand_sandworkflow:instance:get-detail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
@@ -276,25 +278,25 @@ VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowManage'),'流程分组','sandworkflow/manage/group','',2,'group','/plugin/sandworkflow/manage/group/index',NULL,'ri:folder-line',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'列表','','sandworkflow:group:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'全部分组','','sandworkflow:group:all',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'读取','','sandworkflow:group:read',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'保存','','sandworkflow:group:save',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'更新','','sandworkflow:group:update',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'删除','','sandworkflow:group:destroy',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'列表','','sand_sandworkflow:group:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'全部分组','','sand_sandworkflow:group:all',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'读取','','sand_sandworkflow:group:read',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'保存','','sand_sandworkflow:group:save',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'更新','','sand_sandworkflow:group:update',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/group'),'删除','','sand_sandworkflow:group:destroy',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflowManage'),'流程定义','sandworkflow/manage/definition','',2,'definition','/plugin/sandworkflow/manage/definition/index',NULL,'ri:node-tree',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'定义列表','','sandworkflow:definition:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'发布','','sandworkflow:definition:publish',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'版本','','sandworkflow:definition:versions',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'读取','','sandworkflow:definition:read',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'保存','','sandworkflow:definition:save',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'更新','','sandworkflow:definition:update',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'删除','','sandworkflow:definition:destroy',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'定义列表','','sand_sandworkflow:definition:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'发布','','sand_sandworkflow:definition:publish',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'版本','','sand_sandworkflow:definition:versions',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'读取','','sand_sandworkflow:definition:read',3,'','',NULL,'',97,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'保存','','sand_sandworkflow:definition:save',3,'','',NULL,'',96,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'更新','','sand_sandworkflow:definition:update',3,'','',NULL,'',95,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/manage/definition'),'删除','','sand_sandworkflow:definition:destroy',3,'','',NULL,'',94,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
@@ -305,17 +307,17 @@ VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflow'),'流程数据','sandworkflow/data/instance','',2,'data/instance','/plugin/sandworkflow/data/instance/index',NULL,'ri:database-2-line',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/data/instance'),'列表','','sandworkflow:instance:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/data/instance'),'详情','','sandworkflow:instance:getDetail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/data/instance'),'列表','','sand_sandworkflow:instance:index',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/data/instance'),'详情','','sand_sandworkflow:instance:get-detail',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time")
 VALUES
 ((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'SandWorkflow'),'组织数据','sandworkflow/org','',2,'org','',NULL,'',50,'',2,2,1,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 INSERT INTO "sand_system_menu" ("parent_id","name","code","slug","type","path","component","method","icon","sort","link_url","is_iframe","is_keep_alive","is_hidden","is_fixed_tab","is_full_page","generate_id","generate_key","status","remark","created_by","updated_by","create_time","update_time","delete_time") VALUES
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'用户列表','','sandworkflow:index:listUsers',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'角色列表','','sandworkflow:index:listRoles',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
-((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'部门列表','','sandworkflow:index:listDepts',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'用户列表','','sand_sandworkflow:index:list-users',3,'','',NULL,'',100,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'角色列表','','sand_sandworkflow:index:list-roles',3,'','',NULL,'',99,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL),
+((SELECT "id" FROM "sand_system_menu" WHERE "code" = 'sandworkflow/org'),'部门列表','','sand_sandworkflow:index:list-depts',3,'','',NULL,'',98,'',2,2,2,2,2,0,'',1,'',1,1,NOW(),NOW(),NULL);
 
 -- 绑定到非超管角色（超管 id=1 默认全权限）
 INSERT INTO "sand_system_role_menu" ("role_id", "menu_id")
@@ -323,7 +325,8 @@ SELECT r.id, m.id
 FROM "sand_system_role" r
 JOIN "sand_system_menu" m
   ON (
-    m.slug LIKE 'sandworkflow:%'
+    m.slug LIKE 'sand_sandworkflow:%'
+    OR m.slug LIKE 'sandworkflow:%'
     OR m.component LIKE '/plugin/sandworkflow/%'
     OR m.code IN ('SandWorkflow','SandWorkflowCenter','SandWorkflowManage')
     OR m.name LIKE 'sandworkflow/%'

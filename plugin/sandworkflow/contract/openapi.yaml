@@ -4,8 +4,8 @@ info:
   version: "1.0"
   description: SandWorkflow 管理端接口契约片段。app 目录名 sandworkflow，
     接口统一落在 /api/admin/v1/plugin/sandworkflow/ 命名空间；
-    权限域按宿主契约约定使用 sand_sandworkflow:（插件代码内
-    #[Permission] 注解的运行时域为 sandworkflow:，两者是不同层面的命名）。
+    权限域统一使用 sand_sandworkflow:，契约 x-permission、代码内
+    #[Permission] 注解与菜单 slug 三处同码。
 
 # 插件只登记本域新增码；宿主已登记码（如 IDEMPOTENCY_KEY_REUSED）直接引用。
 x-error-catalog:

@@ -19,7 +19,7 @@ class GroupController extends BaseController
         parent::__construct();
     }
 
-    #[Permission('流程分组列表', 'sandworkflow:group:index')]
+    #[Permission('流程分组列表', 'sand_sandworkflow:group:index')]
     public function index(Request $request): Response
     {
         $where = $request->more([
@@ -29,19 +29,19 @@ class GroupController extends BaseController
         return $this->success($this->logic->getList($this->logic->search($where)));
     }
 
-    #[Permission('流程分组全部', 'sandworkflow:group:all')]
+    #[Permission('流程分组全部', 'sand_sandworkflow:group:all')]
     public function all(): Response
     {
         return $this->success($this->logic->getAll($this->logic->search(['status' => 1])));
     }
 
-    #[Permission('流程分组读取', 'sandworkflow:group:read')]
+    #[Permission('流程分组读取', 'sand_sandworkflow:group:read')]
     public function read(Request $request): Response
     {
         return $this->success($this->logic->read($request->input('id', 0))->toArray());
     }
 
-    #[Permission('流程分组保存', 'sandworkflow:group:save')]
+    #[Permission('流程分组保存', 'sand_sandworkflow:group:save')]
     public function save(Request $request): Response
     {
         $data = $request->post();
@@ -49,7 +49,7 @@ class GroupController extends BaseController
         return $this->success(['id' => $this->logic->add($data)], '保存成功');
     }
 
-    #[Permission('流程分组更新', 'sandworkflow:group:update')]
+    #[Permission('流程分组更新', 'sand_sandworkflow:group:update')]
     public function update(Request $request): Response
     {
         $data = $request->post();
@@ -58,7 +58,7 @@ class GroupController extends BaseController
         return $this->success('更新成功');
     }
 
-    #[Permission('流程分组删除', 'sandworkflow:group:destroy')]
+    #[Permission('流程分组删除', 'sand_sandworkflow:group:destroy')]
     public function destroy(Request $request): Response
     {
         $this->logic->destroy($request->post('ids', ''));

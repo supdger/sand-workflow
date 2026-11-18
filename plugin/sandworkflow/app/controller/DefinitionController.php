@@ -19,7 +19,7 @@ class DefinitionController extends BaseController
         parent::__construct();
     }
 
-    #[Permission('流程定义列表', 'sandworkflow:definition:index')]
+    #[Permission('流程定义列表', 'sand_sandworkflow:definition:index')]
     public function index(Request $request): Response
     {
         $where = $request->more([
@@ -30,7 +30,7 @@ class DefinitionController extends BaseController
         return $this->success($this->logic->getList($this->logic->search($where)));
     }
 
-    #[Permission('可发起流程列表', 'sandworkflow:definition:available')]
+    #[Permission('可发起流程列表', 'sand_sandworkflow:definition:available')]
     public function available(Request $request): Response
     {
         $query = $this->logic->search($request->more([
@@ -41,19 +41,19 @@ class DefinitionController extends BaseController
         return $this->success($this->logic->getList($query));
     }
 
-    #[Permission('流程定义版本', 'sandworkflow:definition:versions')]
+    #[Permission('流程定义版本', 'sand_sandworkflow:definition:versions')]
     public function versions(Request $request): Response
     {
         return $this->success($this->logic->versions((int) $request->get('id', 0)));
     }
 
-    #[Permission('流程定义读取', 'sandworkflow:definition:read')]
+    #[Permission('流程定义读取', 'sand_sandworkflow:definition:read')]
     public function read(Request $request): Response
     {
         return $this->success($this->logic->read($request->input('id', 0))->toArray());
     }
 
-    #[Permission('流程定义保存', 'sandworkflow:definition:save')]
+    #[Permission('流程定义保存', 'sand_sandworkflow:definition:save')]
     public function save(Request $request): Response
     {
         $data = $request->post();
@@ -61,7 +61,7 @@ class DefinitionController extends BaseController
         return $this->success(['id' => $this->logic->add($data)], '保存成功');
     }
 
-    #[Permission('流程定义更新', 'sandworkflow:definition:update')]
+    #[Permission('流程定义更新', 'sand_sandworkflow:definition:update')]
     public function update(Request $request): Response
     {
         $data = $request->post();
@@ -70,7 +70,7 @@ class DefinitionController extends BaseController
         return $this->success('更新成功');
     }
 
-    #[Permission('流程定义发布', 'sandworkflow:definition:publish')]
+    #[Permission('流程定义发布', 'sand_sandworkflow:definition:publish')]
     public function publish(Request $request): Response
     {
         $data = $request->post();
@@ -78,7 +78,7 @@ class DefinitionController extends BaseController
         return $this->success(['id' => $this->logic->publish($data)], '发布成功');
     }
 
-    #[Permission('流程定义删除', 'sandworkflow:definition:destroy')]
+    #[Permission('流程定义删除', 'sand_sandworkflow:definition:destroy')]
     public function destroy(Request $request): Response
     {
         $this->logic->destroy($request->post('ids', ''));
